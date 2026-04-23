@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-cyber-bg: #02040a;
+  --color-cyber-card: rgba(255, 255, 255, 0.05); /* bg-white/5 */
+  --color-cyber-card-hover: rgba(255, 255, 255, 0.1); /* hover:bg-white/10 */
+  --color-cyber-accent: #22d3ee; /* text-cyan-400 */
+  --color-cyber-neon: #34d399; /* text-emerald-400 */
+  --color-cyber-danger: #ef4444; /* text-red-500 */
+  --color-cyber-warning: #f59e0b; /* text-amber-500 */
+  --color-cyber-border: rgba(255, 255, 255, 0.1); /* border-white/10 */
+  --color-cyber-text: #f1f5f9; /* text-slate-100 */
+  --color-cyber-text-muted: #94a3b8; /* text-slate-400 */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  background-color: var(--color-cyber-bg);
+  color: var(--color-cyber-text);
+  font-family: var(--font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar for cyber theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-cyber-accent);
+}
+
+.markdown-body pre {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--color-cyber-border);
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-body code {
+  color: var(--color-cyber-accent);
+  font-family: var(--font-mono);
+}
+.markdown-body p {
+  margin-bottom: 0.5rem;
+}
+
+.glass-panel {
+  background: var(--color-cyber-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-cyber-border);
+}
+
