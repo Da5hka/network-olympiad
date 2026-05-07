@@ -1,12 +1,20 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { AppState, Participant, Task, RouterDiagnostic, CompetitionState } from '../types';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AppState, Participant, Task, RouterDiagnostic, CompetitionState, ParticipantStatus } from '../types';
 import { generateId } from '../lib/utils';
 import { initialMockData } from '../data/mockData';
+
+const STORAGE_KEYS = {
+  TOKEN: 'adminToken',
+  COMPETITION_STATE: 'competitionState',
+  PARTICIPANTS: 'participants',
+  SCORES: 'participantScores',
+};
 
 interface AppContextType {
   state: AppState;
   setCompetitionState: (state: CompetitionState) => void;
   updateParticipantScore: (participantId: string, taskId: string, score: number, secureToken?: string) => void;
+  updateParticipantStatus: (participantId: string, status: ParticipantStatus) => void;
   updateTask: (task: Task) => void;
   addParticipant: (participant: Omit<Participant, 'id' | 'totalScore' | 'taskScores' | 'lastUpdated'>) => void;
   updateDiagnostic: (diagnostic: RouterDiagnostic) => void;
@@ -16,8 +24,69 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+function loadInitialState(): AppState {
+  const base = { ...initialMockData };
+
+  // Restore competition state
+  const savedCompState = localStorage.getItem(STORAGE_KEYS.COMPETITION_STATE);
+  if (savedCompState && ['NOT_STARTED', 'RUNNING', 'FINISHED'].includes(savedCompState)) {
+    base.competitionState = savedCompState as CompetitionState;
+  }
+
+  // Restore admin session
+  const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+  if (token) {
+    base.isAdminAuthenticated = true;
+  }
+
+  // Restore participant scores and status
+  const savedScores = localStorage.getItem(STORAGE_KEYS.SCORES);
+  if (savedScores) {
+    try {
+      const scoresMap: Record<string, { taskScores: any[]; totalScore: number; status: ParticipantStatus }> = JSON.parse(savedScores);
+      base.participants = base.participants.map(p => {
+        const saved = scoresMap[p.id];
+        if (saved) {
+          return {
+            ...p,
+            taskScores: saved.taskScores || p.taskScores,
+            totalScore: saved.totalScore ?? p.totalScore,
+            status: saved.status || p.status,
+          };
+        }
+        return p;
+      });
+    } catch {}
+  }
+
+  return base;
+}
+
+function saveParticipantData(participants: Participant[]) {
+  const scoresMap: Record<string, { taskScores: any[]; totalScore: number; status: ParticipantStatus }> = {};
+  for (const p of participants) {
+    scoresMap[p.id] = {
+      taskScores: p.taskScores,
+      totalScore: p.totalScore,
+      status: p.status,
+    };
+  }
+  localStorage.setItem(STORAGE_KEYS.SCORES, JSON.stringify(scoresMap));
+}
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AppState>(initialMockData);
+  const [state, setState] = useState<AppState>(loadInitialState);
+
+  // Validate token on mount
+  useEffect(() => {
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    if (token) {
+      fetch('http://localhost:3001/api/health', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).catch(() => {});
+      // Token validity is checked on actual API calls; if expired, user gets logged out naturally
+    }
+  }, []);
 
   const loginAdmin = async (passkey: string) => {
     try {
@@ -32,7 +101,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       const { token } = await res.json();
       if (token) {
-        sessionStorage.setItem('adminToken', token);
+        localStorage.setItem(STORAGE_KEYS.TOKEN, token);
         setState(prev => ({ ...prev, isAdminAuthenticated: true }));
         return true;
       }
@@ -43,17 +112,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const logoutAdmin = () => {
-    sessionStorage.removeItem('adminToken');
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
     setState(prev => ({ ...prev, isAdminAuthenticated: false }));
   };
 
   const setCompetitionState = (competitionState: CompetitionState) => {
+    localStorage.setItem(STORAGE_KEYS.COMPETITION_STATE, competitionState);
     setState((prev) => ({ ...prev, competitionState }));
   };
 
   const updateParticipantScore = (participantId: string, taskId: string, score: number, secureToken?: string) => {
-    // SECURITY FIX: Prevent unauthorized score tampering from clients.
-    // Point updates from the router scanner must include a valid secure token (simulating HMAC signature).
     if (secureToken !== 'router-scanner-secret-token') {
       console.error('SECURITY WARNING: Unauthorized point update attempt rejected.');
       return;
@@ -63,34 +131,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const task = prev.tasks.find(t => t.id === taskId);
       if (!task) return prev;
 
-      // SECURITY BOUND CHECK: Ensure points cannot exceed the task's maximum limit.
       const validatedScore = Math.min(Math.max(0, score), task.maxScore);
 
-      return {
-        ...prev,
-        participants: prev.participants.map((p) => {
-          if (p.id === participantId) {
-            const existingTaskScoreIndex = p.taskScores.findIndex(ts => ts.taskId === taskId);
-            let newTaskScores = [...p.taskScores];
-            
-            if (existingTaskScoreIndex >= 0) {
-              newTaskScores[existingTaskScoreIndex] = { ...newTaskScores[existingTaskScoreIndex], score: validatedScore };
-            } else {
-              newTaskScores.push({ taskId, score: validatedScore, completedAt: new Date().toISOString() });
-            }
+      const newParticipants = prev.participants.map((p) => {
+        if (p.id === participantId) {
+          const existingTaskScoreIndex = p.taskScores.findIndex(ts => ts.taskId === taskId);
+          let newTaskScores = [...p.taskScores];
 
-            const totalScore = newTaskScores.reduce((sum, ts) => sum + ts.score, 0);
-
-            return {
-              ...p,
-              taskScores: newTaskScores,
-              totalScore,
-              lastUpdated: new Date().toISOString()
-            };
+          if (existingTaskScoreIndex >= 0) {
+            newTaskScores[existingTaskScoreIndex] = { ...newTaskScores[existingTaskScoreIndex], score: validatedScore };
+          } else {
+            newTaskScores.push({ taskId, score: validatedScore, completedAt: new Date().toISOString() });
           }
-          return p;
-        })
-      };
+
+          const totalScore = newTaskScores.reduce((sum, ts) => sum + ts.score, 0);
+
+          return {
+            ...p,
+            taskScores: newTaskScores,
+            totalScore,
+            lastUpdated: new Date().toISOString()
+          };
+        }
+        return p;
+      });
+
+      saveParticipantData(newParticipants);
+
+      return { ...prev, participants: newParticipants };
+    });
+  };
+
+  const updateParticipantStatus = (participantId: string, status: ParticipantStatus) => {
+    setState((prev) => {
+      const newParticipants = prev.participants.map(p =>
+        p.id === participantId ? { ...p, status, lastUpdated: new Date().toISOString() } : p
+      );
+      saveParticipantData(newParticipants);
+      return { ...prev, participants: newParticipants };
     });
   };
 
@@ -109,10 +187,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       taskScores: [],
       lastUpdated: new Date().toISOString()
     };
-    setState((prev) => ({
-      ...prev,
-      participants: [...prev.participants, newParticipant],
-    }));
+    setState((prev) => {
+      const newParticipants = [...prev.participants, newParticipant];
+      saveParticipantData(newParticipants);
+      return { ...prev, participants: newParticipants };
+    });
   };
 
   const updateDiagnostic = (diagnostic: RouterDiagnostic) => {
@@ -133,7 +212,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider value={{ state, setCompetitionState, updateParticipantScore, updateTask, addParticipant, updateDiagnostic, loginAdmin, logoutAdmin }}>
+    <AppContext.Provider value={{ state, setCompetitionState, updateParticipantScore, updateParticipantStatus, updateTask, addParticipant, updateDiagnostic, loginAdmin, logoutAdmin }}>
       {children}
     </AppContext.Provider>
   );

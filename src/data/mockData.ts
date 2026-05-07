@@ -28,7 +28,7 @@ export const initialMockData: AppState = {
       subCategory: 'BGP',
       difficulty: 'Medium',
       maxScore: 2,
-      description: 'Regional Internet Registry-ээс авсан public resource (ipv4 ipv6 сүлжээ)-oo ISP-руу зарлаж интернэтд холбогдоно уу',
+      description: 'public ipv4 сүлжээг 2 sub сүлжээ болгон ISP-руу зарлаж интернэтд холбогдоно уу!, ipv6 сүлжээг /32-оор ISP-руу зарлаж интернэтд холбогдоно уу!',
       hints: [],
       writeup: '',
       isAvailable: true,
@@ -225,27 +225,146 @@ export const initialMockData: AppState = {
       owner: 'Altai',
       checkCommand: 'show crypto ipsec sa',
     },
+    {
+      id: 'c14',
+      title: 'NTP',
+      category: 'Service',
+      subCategory: 'NTP',
+      difficulty: 'Medium',
+      maxScore: 2,
+      description: 'Fusion router#1 дээр NTP Master тохиргоо хийнэ үү, Fusion router#2-ын цагийн тохиргоогоо Fusion router#1-оос авна. Fusion router#1 цагаа EVE-NG системийн хаягаасаа sync хийдэг байхаар тохируулна. Цагийн бүсийг ULAT 8 байхаар заана.',
+      hints: [],
+      writeup: '',
+      isAvailable: true,
+      scoreValueHint: '2 оноо - NTP sync, ULAT timezone тохируулсан',
+      targetDevice: 'Fusion-rtr01, Fusion-rtr02',
+      solversCount: 0,
+      owner: 'Byambaa',
+      checkCommand: 'show ntp associations / show clock',
+    },
+    {
+      id: 'c15',
+      title: 'HSRP',
+      category: 'Service',
+      subCategory: 'HSRP',
+      difficulty: 'Medium',
+      maxScore: 2,
+      description: 'CorpGW#2 дээр Vlan 20-ийн HSRP Master төлөвийг шилжүүлэх тохиргоог хийнэ үү.',
+      hints: [],
+      writeup: '',
+      isAvailable: true,
+      scoreValueHint: '2 оноо - HSRP State Active',
+      targetDevice: 'corp-dsw02',
+      solversCount: 0,
+      owner: 'Byambaa',
+      checkCommand: 'show standby vlan 20 | include State',
+    },
+    {
+      id: 'c16',
+      title: 'TCLSH',
+      category: 'DevOps',
+      subCategory: 'TCLSH',
+      difficulty: 'Hard',
+      maxScore: 2,
+      description: 'Fusion router болон Wan router-ийн OSPF BGP Status-уудыг шалгадаг TCLSH script-ийг хөгжүүл. Script-ыг wan router#1 дээр statuscheck нэртэй file үүсгэн хадгална.',
+      hints: [],
+      writeup: '',
+      isAvailable: true,
+      scoreValueHint: '2 оноо - TCLSH script бичигдсэн (гараар шалгана)',
+      targetDevice: 'wan-rtr01',
+      solversCount: 0,
+      owner: 'Byambaa',
+      checkCommand: 'Гараар шалгана',
+    },
+    {
+      id: 'c17',
+      title: 'OSPF-6',
+      category: 'Troubleshooting',
+      subCategory: 'OSPF',
+      difficulty: 'Medium',
+      maxScore: 2,
+      description: 'Fusion router#2 дээр өгсөн OSPF Log дээрээс асуудлыг илрүүлж Neighbor full болохгүй байгаа асуудлыг шийдвэрлэж засварла',
+      hints: [],
+      writeup: '',
+      isAvailable: true,
+      scoreValueHint: '2 оноо - OSPF neighbor FULL state',
+      targetDevice: 'Fusion-rtr02',
+      solversCount: 0,
+      owner: 'Byambaa',
+      checkCommand: 'show ip ospf neighbor | inc 1020',
+    },
+    {
+      id: 'c18',
+      title: 'TFTP-1',
+      category: 'Service',
+      subCategory: 'TFTP',
+      difficulty: 'Medium',
+      maxScore: 2,
+      description: 'Corp-esw03 дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFTP Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ',
+      hints: [],
+      writeup: '',
+      isAvailable: true,
+      scoreValueHint: '2 оноо - TFTP-ээс тохиргоо сэргээгдсэн',
+      targetDevice: 'corp-esw03',
+      solversCount: 0,
+      owner: 'Byambaa',
+      checkCommand: 'show running-config | include JwX0|/M4P+S4',
+    },
+    {
+      id: 'c19',
+      title: 'TFTP-2',
+      category: 'Implementation',
+      subCategory: 'TFTP',
+      difficulty: 'Medium',
+      maxScore: 2,
+      description: 'Corp-esw01 тохиргоогоо backup хийдэг тохиргоо байхгүй, Corp-esw02 дээр гарсан асуудал дахин үүсэхээс сэргийлж төхөөрөмжүүдийн running-config ийг TFTP Server-лүү 10 минут тутамд automate-аар хадгалдаг шийдлийг олж хэрэгжүүл. TFTP Server дээр тохиргоог хадгалахдаа Hostname-time форматаар хадгална.',
+      hints: [],
+      writeup: '',
+      isAvailable: true,
+      scoreValueHint: '2 оноо - Archive автомат backup тохируулсан',
+      targetDevice: 'corp-esw01',
+      solversCount: 0,
+      owner: 'Byambaa',
+      checkCommand: 'show running-config | sec archive',
+    },
+    {
+      id: 'c20',
+      title: 'STP',
+      category: 'Troubleshooting',
+      subCategory: 'STP',
+      difficulty: 'Medium',
+      maxScore: 2,
+      description: 'corp-esw02 ийн Uplink нь CorpGW-1 рүү холбогдсон холболт бүх vlan spanning-tree block төлөвт орсон асуудлыг засварла.',
+      hints: [],
+      writeup: '',
+      isAvailable: true,
+      scoreValueHint: '2 оноо - Et0/1 Root FWD бүх VLAN дээр',
+      targetDevice: 'corp-esw02',
+      solversCount: 0,
+      owner: 'Byambaa',
+      checkCommand: 'show spanning-tree | inc Et0/1',
+    },
   ],
   participants: [
     {
-      id: 'p1', name: 'Содном Тэлмэн', organization: 'МУИС', category: 'Student', routerNumber: 'R01', routerIp: '10.16.16.11', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      id: 'p1', name: 'Содном Тэлмэн', organization: 'МУИС', category: 'Student', routerNumber: 'R01', routerIp: '10.16.15.3', totalScore: 0,
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p2', name: 'Болд Бэлгүдэй', organization: 'МУИС', category: 'Student', routerNumber: 'R02', routerIp: '10.16.16.12', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:22:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:22:00Z'
     },
     {
       id: 'p3', name: 'Эрдэнэтөгс Цэнгүүн', organization: 'МУИС', category: 'Student', routerNumber: 'R03', routerIp: '10.16.16.13', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:21:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:21:00Z'
     },
     {
       id: 'p4', name: 'Баярсайхан Энхмандах', organization: 'ШУТИС', category: 'Student', routerNumber: 'R04', routerIp: '10.16.16.14', totalScore: 0,
-      taskScores: [], status: 'Issues', lastUpdated: '2026-04-23T04:15:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:15:00Z'
     },
     {
       id: 'p5', name: 'Пүрэвдорж Тэмүүжин', organization: 'МУИС', category: 'Student', routerNumber: 'R05', routerIp: '10.16.16.15', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:21:30Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:21:30Z'
     },
     {
       id: 'p6', name: 'Энхтөр Мөнх-Оргил', organization: 'ШУТИС', category: 'Student', routerNumber: 'R06', routerIp: '10.16.16.16', totalScore: 0,
@@ -253,133 +372,100 @@ export const initialMockData: AppState = {
     },
     {
       id: 'p7', name: 'Эрдэнэбаяр Бумбаяр', organization: 'ШУТИС', category: 'Student', routerNumber: 'R07', routerIp: '10.16.16.17', totalScore: 0,
-      taskScores: [], status: 'Offline', lastUpdated: '2026-04-23T04:00:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:00:00Z'
     },
     {
       id: 'p8', name: 'Алтанбаяр Номин-Эрдэнэ', organization: 'ШУТИС', category: 'Student', routerNumber: 'R08', routerIp: '10.16.16.18', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:22:15Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:22:15Z'
     },
     {
       id: 'p9', name: 'Галбадрах Мөнхтулга', organization: 'ШУТИС', category: 'Student', routerNumber: 'R09', routerIp: '10.16.16.19', totalScore: 0,
-      taskScores: [], status: 'Issues', lastUpdated: '2026-04-23T04:15:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:15:00Z'
     },
     {
       id: 'p10', name: 'Мөнхбаатар Сугарбаяр', organization: 'МУИС', category: 'Student', routerNumber: 'R10', routerIp: '10.16.16.20', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:45Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:45Z'
     },
     {
       id: 'p11', name: 'Зундуй Сүхбат', organization: 'ШУТИС', category: 'Student', routerNumber: 'R11', routerIp: '10.16.16.21', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:22:30Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:22:30Z'
     },
     {
       id: 'p12', name: 'Пүрэвтогоо Оюун-Эрдэнэ', organization: 'МУИС', category: 'Student', routerNumber: 'R12', routerIp: '10.16.16.22', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:19:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:19:00Z'
     },
     {
       id: 'p13', name: 'Ганпүрэв Мөнхжаргал', organization: 'МУИС', category: 'Student', routerNumber: 'R13', routerIp: '10.16.16.23', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p14', name: 'Бат-Эрдэнэ Бадрал', organization: 'ШУТИС', category: 'Student', routerNumber: 'R14', routerIp: '10.16.16.24', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p15', name: 'Тайван Төржавхлан', organization: 'МУИС', category: 'Student', routerNumber: 'R15', routerIp: '10.16.16.25', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p16', name: 'Дашдорж Онон', organization: 'МУИС', category: 'Student', routerNumber: 'R16', routerIp: '10.16.16.26', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p17', name: 'Батбаясах Ган-Эрдэнэ', organization: 'ШУТИС', category: 'Student', routerNumber: 'R17', routerIp: '10.16.16.27', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p18', name: 'Батхүрэл Болорсүх', organization: 'МУИС', category: 'Student', routerNumber: 'R18', routerIp: '10.16.16.28', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p19', name: 'Уугантогтох Мөнх-Од', organization: 'ШУТИС', category: 'Student', routerNumber: 'R19', routerIp: '10.16.16.29', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p20', name: 'Батболд Амгалан', organization: 'ШМТИС', category: 'Student', routerNumber: 'R20', routerIp: '10.16.16.30', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p21', name: 'Ганбаяр Билгүүнбилэг', organization: 'Бодь Электроникс ХХК', category: 'Engineer', routerNumber: 'R21', routerIp: '10.16.16.31', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p22', name: 'Дэлгэрсайхан Амарсанааа', organization: 'Дөл Судар ХХК', category: 'Engineer', routerNumber: 'R22', routerIp: '10.16.16.32', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p23', name: 'Лхамгарав Ариунхишиг', organization: 'Цахилгаан дамжуулах үндэсний сүлжээ ТӨХК', category: 'Engineer', routerNumber: 'R23', routerIp: '10.16.16.33', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p24', name: 'Цогбадрах Ганболд', organization: 'ИНФО СЕК ПЛАС ХХК', category: 'Engineer', routerNumber: 'R24', routerIp: '10.16.16.34', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p25', name: 'Эрдэнэбат Амгаланбаяр', organization: 'Мобиком корпораци', category: 'Engineer', routerNumber: 'R25', routerIp: '10.16.16.35', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p26', name: 'Бацаанчанаг Чагнаадорж', organization: 'Мобиком корпораци', category: 'Engineer', routerNumber: 'R26', routerIp: '10.16.16.36', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p27', name: 'Баасандорж Нямдорж', organization: 'Телко Инженеринг сервис ХХК', category: 'Engineer', routerNumber: 'R27', routerIp: '10.16.16.37', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p28', name: 'Мөнхбат Халиун', organization: 'Эс системс ХХК', category: 'Engineer', routerNumber: 'R28', routerIp: '10.16.16.38', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p29', name: 'Эрдэнэням Эрдэнэдалай', organization: 'Эс системс ХХК', category: 'Engineer', routerNumber: 'R29', routerIp: '10.16.16.39', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
       id: 'p30', name: 'Бат-Эрдэнэ Эрдэнэбат', organization: 'ШУТИС, МХТС', category: 'Engineer', routerNumber: 'R30', routerIp: '10.16.16.40', totalScore: 0,
-      taskScores: [], status: 'Online', lastUpdated: '2026-04-23T04:20:00Z'
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     }
   ],
-  diagnostics: [
-    {
-      id: 'd1', participantId: 'p1', ip: '10.16.16.11', routerNumber: 'R01', status: 'Healthy', lastCheck: '2026-04-23T04:22:00Z',
-      isReachable: true, servicesReachable: { 'SSH': true, 'ICMP': true, 'HTTP': false }, protocolsStatus: { 'OSPF': 'Up', 'BGP': 'Up' }, validationPassed: true,
-      logs: [
-        { id: 'l1', timestamp: '2026-04-23T04:21:55Z', level: 'INFO', message: 'Initiating diagnostics on 10.16.16.11' },
-        { id: 'l2', timestamp: '2026-04-23T04:21:56Z', level: 'SUCCESS', message: 'ICMP reachable (avg: 2.1ms)' },
-        { id: 'l3', timestamp: '2026-04-23T04:21:58Z', level: 'SUCCESS', message: 'OSPF Adjacency FULL with 10.0.0.1' },
-      ]
-    },
-    {
-      id: 'd2', participantId: 'p2', ip: '10.16.16.12', routerNumber: 'R02', status: 'Healthy', lastCheck: '2026-04-23T04:22:00Z',
-      isReachable: true, servicesReachable: { 'SSH': true, 'ICMP': true, 'HTTP': false }, protocolsStatus: { 'OSPF': 'Up', 'BGP': 'Down' }, validationPassed: true,
-      logs: [
-        { id: 'l1', timestamp: '2026-04-23T04:21:55Z', level: 'INFO', message: 'Initiating diagnostics on 10.16.16.12' },
-        { id: 'l2', timestamp: '2026-04-23T04:21:56Z', level: 'SUCCESS', message: 'ICMP reachable (avg: 5.4ms)' },
-      ]
-    },
-    {
-      id: 'd4', participantId: 'p4', ip: '10.16.16.14', routerNumber: 'R04', status: 'Degraded', lastCheck: '2026-04-23T04:22:00Z',
-      isReachable: true, servicesReachable: { 'SSH': true, 'ICMP': true, 'HTTP': false }, protocolsStatus: { 'OSPF': 'Down', 'BGP': 'Down' }, validationPassed: false,
-      logs: [
-        { id: 'l1', timestamp: '2026-04-23T04:21:55Z', level: 'INFO', message: 'Initiating diagnostics on 10.16.16.14' },
-        { id: 'l2', timestamp: '2026-04-23T04:21:57Z', level: 'ERROR', message: 'OSPF Adjacency INIT state - ExStart failed' },
-      ]
-    },
-    {
-      id: 'd7', participantId: 'p7', ip: '10.16.16.17', routerNumber: 'R07', status: 'Down', lastCheck: '2026-04-23T04:20:00Z',
-      isReachable: false, servicesReachable: { 'SSH': false, 'ICMP': false, 'HTTP': false }, protocolsStatus: { 'OSPF': 'Down', 'BGP': 'Down' }, validationPassed: false,
-      logs: [
-        { id: 'l1', timestamp: '2026-04-23T04:20:00Z', level: 'ERROR', message: 'Connection timeout. No route to host 10.16.16.17' },
-      ]
-    }
-  ]
+  diagnostics: []
 };

@@ -38,7 +38,7 @@ const challenges = [
     id: 'c2',
     category: 'Implementation',
     subCategory: 'BGP',
-    description: 'Regional Internet Registry-ээс авсан public resource (ipv4 ipv6 сүлжээ)-oo ISP-руу зарлаж интернэтд холбогдоно уу',
+    description: 'public ipv4 сүлжээг 2 sub сүлжээ болгон ISP-руу зарлаж интернэтд холбогдоно уу!, ipv6 сүлжээг /32-оор ISP-руу зарлаж интернэтд холбогдоно уу!',
     owner: 'Ulsaa',
     points: 2,
     checks: [
@@ -283,6 +283,112 @@ const challenges = [
           '10.1.8.0/255.255.255.0/0/0',
           { type: 'regex_gt', pattern: '#pkts encaps:\\s*(\\d+)', minValue: 1 },
           { type: 'regex_gt', pattern: '#pkts decaps:\\s*(\\d+)', minValue: 1 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'c14',
+    category: 'Service',
+    subCategory: 'NTP',
+    description: 'Fusion router#1 дээр NTP Master тохиргоо хийнэ үү, Fusion router#2-ын цагийн тохиргоогоо Fusion router#1-оос авна. Fusion router#1 цагаа EVE-NG системийн хаягаасаа sync хийдэг байхаар тохируулна. Цагийн бүсийг ULAT 8 байхаар заана.',
+    owner: 'Byambaa',
+    points: 2,
+    checks: [
+      {
+        device: 'Fusion-rtr01',
+        commands: ['show ntp associations', 'show clock'],
+        matchRules: ['10.16.15.3', 'ULAT']
+      },
+      {
+        device: 'Fusion-rtr02',
+        commands: ['show ntp associations', 'show clock'],
+        matchRules: ['10.1.17.3', 'ULAT']
+      }
+    ]
+  },
+  {
+    id: 'c15',
+    category: 'Service',
+    subCategory: 'HSRP',
+    description: 'CorpGW#2 дээр Vlan 20-ийн HSRP Master төлөвийг шилжүүлэх тохиргоог хийнэ үү.',
+    owner: 'Byambaa',
+    points: 2,
+    checks: [
+      {
+        device: 'corp-dsw02',
+        commands: ['show standby vlan 20 | include State'],
+        matchRules: ['State is Active']
+      }
+    ]
+  },
+  {
+    id: 'c16',
+    category: 'DevOps',
+    subCategory: 'TCLSH',
+    description: 'Fusion router болон Wan router-ийн OSPF BGP Status-уудыг шалгадаг TCLSH script-ийг хөгжүүл. Script-ыг wan router#1 дээр statuscheck нэртэй file үүсгэн хадгална.',
+    owner: 'Byambaa',
+    points: 2,
+    checks: []
+  },
+  {
+    id: 'c17',
+    category: 'Troubleshooting',
+    subCategory: 'OSPF',
+    description: 'Fusion router#2 дээр өгсөн OSPF Log дээрээс асуудлыг илрүүлж Neighbor full болохгүй байгаа асуудлыг шийдвэрлэж засварла',
+    owner: 'Byambaa',
+    points: 2,
+    checks: [
+      {
+        device: 'Fusion-rtr02',
+        commands: ['show ip ospf neighbor | inc 1020'],
+        matchRules: ['FULL/', '10.1.18.5', 'GigabitEthernet0/0.1020']
+      }
+    ]
+  },
+  {
+    id: 'c18',
+    category: 'Service',
+    subCategory: 'TFTP',
+    description: 'Corp-esw03 дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFTP Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ',
+    owner: 'Byambaa',
+    points: 2,
+    checks: [
+      {
+        device: 'corp-esw03',
+        commands: ['show running-config | include JwX0|/M4P+S4'],
+        matchRules: ['JwX0|/M4P+S4']
+      }
+    ]
+  },
+  {
+    id: 'c19',
+    category: 'Implementation',
+    subCategory: 'TFTP',
+    description: 'Corp-esw01 тохиргоогоо backup хийдэг тохиргоо байхгүй, Corp-esw02 дээр гарсан асуудал дахин үүсэхээс сэргийлж төхөөрөмжүүдийн running-config ийг TFTP Server-лүү 10 минут тутамд automate-аар хадгалдаг шийдлийг олж хэрэгжүүл. TFTP Server дээр тохиргоог хадгалахдаа Hostname-time форматаар хадгална.',
+    owner: 'Byambaa',
+    points: 2,
+    checks: [
+      {
+        device: 'corp-esw01',
+        commands: ['show running-config | sec archive'],
+        matchRules: ['path tftp://10.16.15.3/$h-$t', 'time-period 10']
+      }
+    ]
+  },
+  {
+    id: 'c20',
+    category: 'Troubleshooting',
+    subCategory: 'STP',
+    description: 'corp-esw02 ийн Uplink нь CorpGW-1 рүү холбогдсон холболт бүх vlan spanning-tree block төлөвт орсон асуудлыг засварла.',
+    owner: 'Byambaa',
+    points: 2,
+    checks: [
+      {
+        device: 'corp-esw02',
+        commands: ['show spanning-tree | inc Et0/1'],
+        matchRules: [
+          { type: 'count', substring: 'Root FWD', minCount: 3 }
         ]
       }
     ]

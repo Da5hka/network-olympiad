@@ -2,7 +2,7 @@ export type CompetitionState = 'NOT_STARTED' | 'RUNNING' | 'FINISHED';
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Expert';
 
-export type TaskCategory = 'Troubleshooting' | 'Implementation' | 'Service';
+export type TaskCategory = 'Troubleshooting' | 'Implementation' | 'Service' | 'DevOps';
 
 export interface Hint {
   id: string;

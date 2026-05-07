@@ -3,12 +3,11 @@ import { useAppContext } from '../store/AppContext';
 import { ShieldAlert, Play, Square, Settings, UserPlus, FileEdit, CheckCircle2, Server, LogOut, Lock, Activity, RefreshCw, XCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { CompetitionState, ParticipantCategory } from '../types';
-import { RouterDiagnosticsPage } from './RouterDiagnosticsPage';
 
 const BACKEND_URL = 'http://localhost:3001';
 
 function getAuthHeaders(): Record<string, string> {
-  const token = sessionStorage.getItem('adminToken');
+  const token = localStorage.getItem('adminToken');
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -52,7 +51,7 @@ interface CheckStatus {
 }
 
 export const AdminPanelPage: React.FC = () => {
-  const { state, setCompetitionState, addParticipant, loginAdmin, logoutAdmin, updateParticipantScore } = useAppContext();
+  const { state, setCompetitionState, addParticipant, loginAdmin, logoutAdmin, updateParticipantScore, updateParticipantStatus } = useAppContext();
   const [activeTab, setActiveTab] = useState<'control' | 'register' | 'hints' | 'diagnostics'>('control');
 
   // Auth Form State
@@ -81,6 +80,10 @@ export const AdminPanelPage: React.FC = () => {
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Connectivity ping state
+  const [isPinging, setIsPinging] = useState(false);
+  const [lastPingTime, setLastPingTime] = useState<string | null>(null);
+
   // Auto-check State
   const [autoCheckEnabled, setAutoCheckEnabled] = useState(false);
   const [autoCheckInfo, setAutoCheckInfo] = useState<{
@@ -99,6 +102,15 @@ export const AdminPanelPage: React.FC = () => {
     };
   }, []);
 
+  // Handle expired session (401 from any API call)
+  const handleApiResponse = (res: Response) => {
+    if (res.status === 401) {
+      logoutAdmin();
+      return false;
+    }
+    return true;
+  };
+
   // Fetch auto-check status and poll for results when auto-check is on
   useEffect(() => {
     if (!state.isAdminAuthenticated) return;
@@ -106,6 +118,7 @@ export const AdminPanelPage: React.FC = () => {
     const fetchAutoStatus = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/api/auto-check`, { headers: getAuthHeaders() });
+        if (!handleApiResponse(res)) return;
         if (res.ok) {
           const data = await res.json();
           setAutoCheckEnabled(data.enabled);
@@ -188,10 +201,17 @@ export const AdminPanelPage: React.FC = () => {
 
   const applyCheckResults = (results: Record<string, CheckResult>) => {
     for (const [participantId, result] of Object.entries(results)) {
-      if (!result.challengeResults) continue;
-      for (const cr of result.challengeResults) {
-        if (cr.passed && cr.points > 0) {
-          updateParticipantScore(participantId, cr.challengeId, cr.points, 'router-scanner-secret-token');
+      // Update participant connection status based on check result
+      if (result.error === 'EVE connection failed' || result.error === 'EVE environment timeout') {
+        updateParticipantStatus(participantId, 'Offline');
+      } else if (result.challengeResults) {
+        const hasErrors = result.challengeResults.some((cr: any) => cr.checks?.some((c: any) => c.error && c.error !== 'Output did not match expected patterns'));
+        updateParticipantStatus(participantId, hasErrors ? 'Issues' : 'Online');
+
+        for (const cr of result.challengeResults) {
+          if (cr.passed && cr.points > 0) {
+            updateParticipantScore(participantId, cr.challengeId, cr.points, 'router-scanner-secret-token');
+          }
         }
       }
     }
@@ -269,6 +289,44 @@ export const AdminPanelPage: React.FC = () => {
       console.error('Single check error:', err);
     }
   };
+
+  // Ping all EVE connections to check real status
+  const handlePingAll = async () => {
+    setIsPinging(true);
+    try {
+      const participants = state.participants.map(p => ({
+        id: p.id,
+        routerIp: p.routerIp
+      }));
+
+      const res = await fetch(`${BACKEND_URL}/api/ping-all`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ participants })
+      });
+
+      if (!handleApiResponse(res)) return;
+      if (res.ok) {
+        const data = await res.json();
+        for (const [participantId, result] of Object.entries(data.results) as [string, any][]) {
+          updateParticipantStatus(participantId, result.status === 'Online' ? 'Online' : 'Offline');
+        }
+        setLastPingTime(data.checkedAt);
+      }
+    } catch (err) {
+      console.error('Ping error:', err);
+    }
+    setIsPinging(false);
+  };
+
+  // Auto-ping every 60 seconds when on diagnostics tab
+  useEffect(() => {
+    if (activeTab !== 'diagnostics' || !state.isAdminAuthenticated) return;
+
+    handlePingAll();
+    const interval = setInterval(handlePingAll, 60000);
+    return () => clearInterval(interval);
+  }, [activeTab, state.isAdminAuthenticated]);
 
   const handleToggleAutoCheck = async () => {
     try {
@@ -798,7 +856,65 @@ export const AdminPanelPage: React.FC = () => {
 
       {activeTab === 'diagnostics' && (
         <div className="glass-panel p-6 rounded-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <RouterDiagnosticsPage />
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-mono text-white uppercase tracking-widest">EVE холболтын төлөв</h2>
+            <div className="flex items-center gap-4">
+              {lastPingTime && (
+                <span className="text-xs text-cyber-text-muted font-mono">
+                  Сүүлд шалгасан: {new Date(lastPingTime).toLocaleTimeString()}
+                </span>
+              )}
+              <button
+                onClick={handlePingAll}
+                disabled={isPinging}
+                className={cn(
+                  "px-4 py-2 rounded-lg font-mono text-sm uppercase flex items-center gap-2 transition-all",
+                  isPinging
+                    ? "bg-gray-600/30 border border-gray-500/30 text-gray-400 cursor-not-allowed"
+                    : "bg-cyber-accent/20 border border-cyber-accent/50 text-cyber-accent hover:bg-cyber-accent hover:text-black"
+                )}
+              >
+                {isPinging ? <><Loader2 className="w-4 h-4 animate-spin" /> Шалгаж байна...</> : <><RefreshCw className="w-4 h-4" /> Холболт шалгах</>}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-xs text-cyber-text-muted mb-4">EVE серверүүд рүү SSH холболт хийж бодит төлвийг шалгана. Автоматаар 60 секунд тутамд шинэчлэгдэнэ.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {state.participants.map(p => {
+              const statusColor = p.status === 'Online' ? 'border-cyber-neon/40 bg-cyber-neon/5'
+                : p.status === 'Offline' ? 'border-cyber-danger/40 bg-cyber-danger/5'
+                : 'border-cyber-warning/40 bg-cyber-warning/5';
+              const dotColor = p.status === 'Online' ? 'bg-cyber-neon'
+                : p.status === 'Offline' ? 'bg-cyber-danger'
+                : 'bg-cyber-warning animate-pulse';
+              const textColor = p.status === 'Online' ? 'text-cyber-neon'
+                : p.status === 'Offline' ? 'text-cyber-danger'
+                : 'text-cyber-warning';
+
+              return (
+                <div key={p.id} className={cn("p-3 rounded-lg border flex items-center justify-between", statusColor)}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", dotColor)} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{p.name}</p>
+                      <p className="text-[10px] font-mono text-cyber-text-muted">{p.routerNumber} &bull; {p.routerIp}</p>
+                    </div>
+                  </div>
+                  <span className={cn("text-[10px] font-mono font-bold uppercase shrink-0", textColor)}>
+                    {p.status === 'Connecting' ? 'ШАЛГААГҮЙ' : p.status === 'Online' ? 'ХОЛБОГДСОН' : 'САЛСАН'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex gap-6 text-xs font-mono text-cyber-text-muted">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cyber-neon inline-block" /> Холбогдсон: {state.participants.filter(p => p.status === 'Online').length}</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cyber-danger inline-block" /> Салсан: {state.participants.filter(p => p.status === 'Offline').length}</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cyber-warning inline-block" /> Шалгаагүй: {state.participants.filter(p => p.status === 'Connecting').length}</span>
+          </div>
         </div>
       )}
 

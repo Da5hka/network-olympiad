@@ -32,10 +32,10 @@ app.use(cors({
 // Body parser with size limit to prevent payload attacks
 app.use(express.json({ limit: '1mb' }));
 
-// Global rate limiter: 100 requests per 15 minutes per IP
+// Global rate limiter: 1000 requests per 15 minutes per IP
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' }
@@ -45,9 +45,12 @@ app.use(globalLimiter);
 // Strict rate limiter for check endpoints (expensive SSH operations)
 const checkLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: 30,
   message: { error: 'Check rate limit exceeded. Try again later.' }
 });
+
+// Session duration: 6 hours
+const SESSION_DURATION_MS = 6 * 60 * 60 * 1000;
 
 // ─── Configuration from environment variables ───────────────────────────────
 
@@ -69,6 +72,9 @@ const MAX_CONCURRENT = 5;
 
 // ─── Authentication middleware ──────────────────────────────────────────────
 
+// Active sessions: token -> expiresAt
+const activeSessions = new Map();
+
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -76,13 +82,15 @@ function requireAuth(req, res, next) {
   }
 
   const token = authHeader.slice(7);
-  const expectedToken = crypto
-    .createHmac('sha256', API_SECRET_KEY)
-    .update('admin-session')
-    .digest('hex');
+  const session = activeSessions.get(token);
 
-  if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expectedToken))) {
-    return res.status(403).json({ error: 'Invalid credentials' });
+  if (!session) {
+    return res.status(401).json({ error: 'Session expired. Please login again.' });
+  }
+
+  if (Date.now() > session.expiresAt) {
+    activeSessions.delete(token);
+    return res.status(401).json({ error: 'Session expired. Please login again.' });
   }
 
   next();
@@ -203,6 +211,12 @@ function evaluateMatches(output, matchRules) {
       if (isNaN(num) || num < rule.minValue) {
         return false;
       }
+    } else if (rule.type === 'count') {
+      const escaped = rule.substring.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const matches = output.match(new RegExp(escaped, 'g'));
+      if (!matches || matches.length < rule.minCount) {
+        return false;
+      }
     }
   }
   return true;
@@ -317,7 +331,7 @@ function checkParticipantEnv(eveIp) {
       const challengeResults = [];
 
       for (const challenge of challenges) {
-        let allChecksPassed = true;
+        let allChecksPassed = challenge.checks.length > 0;
         const checkDetails = [];
 
         for (const check of challenge.checks) {
@@ -406,6 +420,57 @@ function checkParticipantEnv(eveIp) {
   });
 }
 
+// ─── Quick SSH ping (connection test only) ──────────────────────────────────
+
+function pingEve(eveIp) {
+  return new Promise((resolve) => {
+    const client = new Client();
+    const timeout = setTimeout(() => {
+      try { client.end(); } catch (e) {}
+      resolve({ ip: eveIp, status: 'Offline', error: 'Timeout' });
+    }, 8000);
+
+    client.on('ready', () => {
+      clearTimeout(timeout);
+      try { client.end(); } catch (e) {}
+      resolve({ ip: eveIp, status: 'Online' });
+    });
+
+    client.on('error', (err) => {
+      clearTimeout(timeout);
+      resolve({ ip: eveIp, status: 'Offline', error: err.message });
+    });
+
+    client.connect({
+      host: eveIp,
+      port: 22,
+      username: EVE_SERVER_USER,
+      password: EVE_SERVER_PASS,
+      readyTimeout: 7000
+    });
+  });
+}
+
+async function pingAllParticipants(participants) {
+  const results = {};
+
+  for (let i = 0; i < participants.length; i += 10) {
+    const batch = participants.slice(i, i + 10);
+    const batchResults = await Promise.all(
+      batch.map(p => pingEve(p.routerIp).then(r => ({ ...r, participantId: p.id })))
+    );
+    for (const r of batchResults) {
+      results[r.participantId] = {
+        status: r.status,
+        error: r.error || null,
+        checkedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  return results;
+}
+
 // ─── Run checks with concurrency limit ──────────────────────────────────────
 
 async function runAllChecks(participants) {
@@ -459,13 +524,19 @@ app.post('/api/auth/login', rateLimit({
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  // Generate HMAC-based session token
+  // Generate unique session token with 6-hour expiry
+  const sessionId = crypto.randomBytes(32).toString('hex');
   const token = crypto
     .createHmac('sha256', API_SECRET_KEY)
-    .update('admin-session')
+    .update(sessionId)
     .digest('hex');
 
-  res.json({ token });
+  activeSessions.set(token, {
+    createdAt: Date.now(),
+    expiresAt: Date.now() + SESSION_DURATION_MS
+  });
+
+  res.json({ token, expiresIn: SESSION_DURATION_MS / 1000 });
 });
 
 // ─── API Endpoints (all protected) ──────────────────────────────────────────
@@ -567,6 +638,18 @@ app.get('/api/challenges', requireAuth, (req, res) => {
     owner: c.owner,
     points: c.points
   })));
+});
+
+// ─── Connectivity ping endpoint ──────────────────────────────────────────────
+
+app.post('/api/ping-all', requireAuth, async (req, res) => {
+  const { participants } = req.body;
+  if (!participants || !Array.isArray(participants) || participants.length === 0) {
+    return res.status(400).json({ error: 'participants array is required' });
+  }
+
+  const results = await pingAllParticipants(participants);
+  res.json({ results, checkedAt: new Date().toISOString() });
 });
 
 // ─── Auto-check endpoints ───────────────────────────────────────────────────
