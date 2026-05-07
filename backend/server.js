@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 const { Client } = require('ssh2');
-const { challenges, DEVICE_MAP } = require('./tasksConfig');
+const { challenges, DEVICE_MAP, DEVICE_IP } = require('./tasksConfig');
 
 const app = express();
 
@@ -51,7 +51,7 @@ const checkLimiter = rateLimit({
 
 // ─── Configuration from environment variables ───────────────────────────────
 
-const EVE_SERVER_USER = process.env.EVE_SERVER_USER || 'admin';
+const EVE_SERVER_USER = process.env.EVE_SERVER_USER || 'root';
 const EVE_SERVER_PASS = process.env.EVE_SERVER_PASS;
 const DEVICE_USER = process.env.DEVICE_USER;
 const DEVICE_PASS = process.env.DEVICE_PASS;
@@ -124,6 +124,65 @@ let checkState = {
   results: {}
 };
 
+// ─── Auto-check state ───────────────────────────────────────────────────────
+
+const AUTO_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
+
+let autoCheckState = {
+  enabled: false,
+  intervalId: null,
+  storedParticipants: [],
+  nextRunAt: null,
+  lastAutoRunAt: null,
+  runCount: 0
+};
+
+function startAutoCheck() {
+  if (autoCheckState.intervalId) clearInterval(autoCheckState.intervalId);
+
+  autoCheckState.enabled = true;
+  autoCheckState.nextRunAt = new Date(Date.now() + AUTO_CHECK_INTERVAL).toISOString();
+  console.log(`[AUTO-CHECK] Enabled. Next run at ${autoCheckState.nextRunAt}`);
+
+  autoCheckState.intervalId = setInterval(async () => {
+    if (checkState.running) {
+      console.log('[AUTO-CHECK] Skipped - check already running');
+      autoCheckState.nextRunAt = new Date(Date.now() + AUTO_CHECK_INTERVAL).toISOString();
+      return;
+    }
+    if (autoCheckState.storedParticipants.length === 0) {
+      console.log('[AUTO-CHECK] Skipped - no participants registered');
+      autoCheckState.nextRunAt = new Date(Date.now() + AUTO_CHECK_INTERVAL).toISOString();
+      return;
+    }
+
+    console.log(`[AUTO-CHECK] Running check for ${autoCheckState.storedParticipants.length} participants...`);
+    autoCheckState.lastAutoRunAt = new Date().toISOString();
+    autoCheckState.runCount++;
+
+    try {
+      await runAllChecks(autoCheckState.storedParticipants);
+    } catch (err) {
+      console.error('[AUTO-CHECK] Error:', err.message);
+      checkState.running = false;
+      checkState.completedAt = new Date().toISOString();
+    }
+
+    autoCheckState.nextRunAt = new Date(Date.now() + AUTO_CHECK_INTERVAL).toISOString();
+    console.log(`[AUTO-CHECK] Done. Next run at ${autoCheckState.nextRunAt}`);
+  }, AUTO_CHECK_INTERVAL);
+}
+
+function stopAutoCheck() {
+  if (autoCheckState.intervalId) {
+    clearInterval(autoCheckState.intervalId);
+    autoCheckState.intervalId = null;
+  }
+  autoCheckState.enabled = false;
+  autoCheckState.nextRunAt = null;
+  console.log('[AUTO-CHECK] Disabled');
+}
+
 // ─── Match evaluation ───────────────────────────────────────────────────────
 
 function evaluateMatches(output, matchRules) {
@@ -151,13 +210,13 @@ function evaluateMatches(output, matchRules) {
 
 // ─── SSH helpers ─────────────────────────────────────────────────────────────
 
-function runDeviceShell(jumpHost, deviceIp, commands) {
+function runDeviceShell(jumpHost, devicePort, commands) {
   return new Promise((resolve) => {
     const overallTimeout = setTimeout(() => {
       resolve({ success: false, output: '', error: 'Device connection timeout' });
     }, 45000);
 
-    jumpHost.forwardOut('127.0.0.1', 0, deviceIp, 22, (err, stream) => {
+    jumpHost.forwardOut('127.0.0.1', 0, DEVICE_IP, devicePort, (err, stream) => {
       if (err) {
         clearTimeout(overallTimeout);
         return resolve({ success: false, output: '', error: 'Port forward failed' });
@@ -262,8 +321,8 @@ function checkParticipantEnv(eveIp) {
         const checkDetails = [];
 
         for (const check of challenge.checks) {
-          const deviceIp = DEVICE_MAP[check.device];
-          if (!deviceIp) {
+          const deviceInfo = DEVICE_MAP[check.device];
+          if (!deviceInfo) {
             checkDetails.push({
               device: check.device,
               passed: false,
@@ -274,7 +333,7 @@ function checkParticipantEnv(eveIp) {
             continue;
           }
 
-          const result = await runDeviceShell(jumpHost, deviceIp, check.commands);
+          const result = await runDeviceShell(jumpHost, deviceInfo.port, check.commands);
 
           if (!result.success) {
             checkDetails.push({
@@ -437,6 +496,9 @@ app.post('/api/check-all', requireAuth, checkLimiter, async (req, res) => {
     }
   }
 
+  // Store participants for auto-check
+  autoCheckState.storedParticipants = participants;
+
   runAllChecks(participants).catch(err => {
     console.error('Check-all error:', err.message);
     checkState.running = false;
@@ -456,7 +518,11 @@ app.get('/api/check-results', requireAuth, (req, res) => {
     startedAt: checkState.startedAt,
     completedAt: checkState.completedAt,
     progress: checkState.progress,
-    results: checkState.results
+    results: checkState.results,
+    autoCheck: {
+      enabled: autoCheckState.enabled,
+      nextRunAt: autoCheckState.nextRunAt
+    }
   });
 });
 
@@ -501,6 +567,47 @@ app.get('/api/challenges', requireAuth, (req, res) => {
     owner: c.owner,
     points: c.points
   })));
+});
+
+// ─── Auto-check endpoints ───────────────────────────────────────────────────
+
+// Get auto-check status
+app.get('/api/auto-check', requireAuth, (req, res) => {
+  res.json({
+    enabled: autoCheckState.enabled,
+    intervalMinutes: AUTO_CHECK_INTERVAL / 60000,
+    nextRunAt: autoCheckState.nextRunAt,
+    lastAutoRunAt: autoCheckState.lastAutoRunAt,
+    runCount: autoCheckState.runCount,
+    participantCount: autoCheckState.storedParticipants.length
+  });
+});
+
+// Enable auto-check
+app.post('/api/auto-check/start', requireAuth, (req, res) => {
+  // Accept optional participants to register
+  const { participants } = req.body || {};
+  if (participants && Array.isArray(participants) && participants.length > 0) {
+    autoCheckState.storedParticipants = participants;
+  }
+
+  if (autoCheckState.storedParticipants.length === 0) {
+    return res.status(400).json({ error: 'No participants registered. Run a manual check first or provide participants.' });
+  }
+
+  startAutoCheck();
+  res.json({
+    message: 'Auto-check enabled',
+    intervalMinutes: AUTO_CHECK_INTERVAL / 60000,
+    nextRunAt: autoCheckState.nextRunAt,
+    participantCount: autoCheckState.storedParticipants.length
+  });
+});
+
+// Disable auto-check
+app.post('/api/auto-check/stop', requireAuth, (req, res) => {
+  stopAutoCheck();
+  res.json({ message: 'Auto-check disabled' });
 });
 
 // Health check (no auth needed)

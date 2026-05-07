@@ -33,7 +33,7 @@ export const initialMockData: AppState = {
       writeup: '',
       isAvailable: true,
       scoreValueHint: '2 оноо - ISP-уудад route харагдсан',
-      targetDevice: 'ISP-A, ISP-B',
+      targetDevice: 'wan-rtr01, wan-rtr02',
       solversCount: 0,
       owner: 'Ulsaa',
       checkCommand: 'show ip bgp neighbors routes / show bgp ipv6 unicast neighbors routes',

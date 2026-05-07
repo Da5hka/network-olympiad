@@ -1,20 +1,18 @@
 // Device name to management IP mapping (inside each EVE environment)
+// Device name to SSH port mapping
+// All devices are accessed via the EVE host IP, only port differs
+const DEVICE_IP = '10.16.15.4';
 const DEVICE_MAP = {
-  'wan-rtr01':    '10.1.17.1',   // CorpGW-1
-  'wan-rtr02':    '10.1.17.2',   // CorpGW-2
-  'corp-dsw01':   '10.1.16.34',  // DcSW-1
-  'corp-dsw02':   '10.1.16.35',  // DcSW-2
-  'Fusion-rtr01': '10.1.17.4',   // GW-1
-  'Fusion-rtr02': '10.1.17.5',   // GW-2
-  'Core-Router':  '10.1.17.3',
-  'Br1GW':        '10.1.17.6',
-  'CorpSW-1':     '10.1.16.132',
-  'CorpSW-2':     '10.1.16.133',
-  'CorpSW-3':     '10.1.16.134',
-  'IncoSW-1':     '10.1.16.66',
-  'IncoSW-2':     '10.1.16.98',
-  'ISP-A':        '10.1.17.3',   // Core Router acts as ISP-A
-  'ISP-B':        '10.1.17.6',   // Br1GW acts as ISP-B
+  'corp-dsw02':   { port: 30002 },
+  'corp-dsw01':   { port: 30003 },
+  'corp-esw01':   { port: 30004 },
+  'corp-esw02':   { port: 30005 },
+  'corp-esw03':   { port: 30006 },
+  'Br1GW':        { port: 30008 },
+  'Fusion-rtr01': { port: 30013 },
+  'wan-rtr01':    { port: 30014 },
+  'wan-rtr02':    { port: 30015 },
+  'Fusion-rtr02': { port: 30016 },
 };
 
 // All challenges from the competition spreadsheet
@@ -32,7 +30,7 @@ const challenges = [
       {
         device: 'wan-rtr01',
         commands: ['show bgp all summary'],
-        matchRules: ['10.1.18.10', '17000']
+        matchRules: ['10.1.18.10', '17000', '2001:DB8:ABCD:17::10']
       }
     ]
   },
@@ -45,20 +43,20 @@ const challenges = [
     points: 2,
     checks: [
       {
-        device: 'ISP-A',
+        device: 'wan-rtr01',
         commands: [
           'show ip bgp neighbors 202.43.65.2 routes',
           'show bgp ipv6 unicast neighbors 2001:DB9:0:10::3 routes'
         ],
-        matchRules: ['133.34.12.0/23', '2001:DB8::/32']
+        matchRules: ['133.34.12.0/24', '133.34.13.0/24', '2001:DB8::/32']
       },
       {
-        device: 'ISP-B',
+        device: 'wan-rtr02',
         commands: [
           'show ip bgp neighbors 103.88.34.2 routes',
           'show bgp ipv6 unicast neighbors 2001:D29:0:10::3 routes'
         ],
-        matchRules: ['133.34.12.0/23', '2001:DB8::/32']
+        matchRules: ['133.34.12.0/24', '133.34.13.0/24', '2001:DB8::/32']
       }
     ]
   },
@@ -129,6 +127,11 @@ const challenges = [
     checks: [
       {
         device: 'corp-dsw01',
+        commands: ['show ip ospf interface brief'],
+        matchRules: ['Vl30', 'Vl20']
+      },
+      {
+        device: 'corp-dsw02',
         commands: ['show ip ospf interface brief'],
         matchRules: ['Vl30', 'Vl20']
       }
@@ -286,4 +289,4 @@ const challenges = [
   }
 ];
 
-module.exports = { challenges, DEVICE_MAP };
+module.exports = { challenges, DEVICE_MAP, DEVICE_IP };

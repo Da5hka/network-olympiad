@@ -81,12 +81,86 @@ export const AdminPanelPage: React.FC = () => {
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Auto-check State
+  const [autoCheckEnabled, setAutoCheckEnabled] = useState(false);
+  const [autoCheckInfo, setAutoCheckInfo] = useState<{
+    nextRunAt: string | null;
+    lastAutoRunAt: string | null;
+    runCount: number;
+    participantCount: number;
+    intervalMinutes: number;
+  } | null>(null);
+  const [countdown, setCountdown] = useState('');
+
   // Poll for check results
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
+
+  // Fetch auto-check status and poll for results when auto-check is on
+  useEffect(() => {
+    if (!state.isAdminAuthenticated) return;
+
+    const fetchAutoStatus = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auto-check`, { headers: getAuthHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          setAutoCheckEnabled(data.enabled);
+          setAutoCheckInfo(data);
+        }
+      } catch {}
+    };
+
+    fetchAutoStatus();
+    const statusPoll = setInterval(fetchAutoStatus, 10000);
+    return () => clearInterval(statusPoll);
+  }, [state.isAdminAuthenticated]);
+
+  // Auto-check: poll results when enabled
+  useEffect(() => {
+    if (!autoCheckEnabled || !state.isAdminAuthenticated) return;
+
+    const autoPoll = setInterval(async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/check-results`, { headers: getAuthHeaders() });
+        if (res.ok) {
+          const data: CheckStatus = await res.json();
+          setCheckStatus(data);
+          if (!data.running && data.completedAt) {
+            applyCheckResults(data.results);
+          }
+        }
+      } catch {}
+    }, 10000);
+
+    return () => clearInterval(autoPoll);
+  }, [autoCheckEnabled, state.isAdminAuthenticated]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (!autoCheckInfo?.nextRunAt || !autoCheckEnabled) {
+      setCountdown('');
+      return;
+    }
+
+    const tick = () => {
+      const diff = new Date(autoCheckInfo.nextRunAt!).getTime() - Date.now();
+      if (diff <= 0) {
+        setCountdown('Шалгаж байна...');
+        return;
+      }
+      const min = Math.floor(diff / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`);
+    };
+
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [autoCheckInfo?.nextRunAt, autoCheckEnabled]);
 
   const startPolling = () => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -193,6 +267,45 @@ export const AdminPanelPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Single check error:', err);
+    }
+  };
+
+  const handleToggleAutoCheck = async () => {
+    try {
+      if (autoCheckEnabled) {
+        await fetch(`${BACKEND_URL}/api/auto-check/stop`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+        setAutoCheckEnabled(false);
+        setAutoCheckInfo(prev => prev ? { ...prev, nextRunAt: null } : null);
+      } else {
+        const participants = state.participants.map(p => ({
+          id: p.id,
+          name: p.name,
+          routerIp: p.routerIp,
+          routerNumber: p.routerNumber
+        }));
+
+        const res = await fetch(`${BACKEND_URL}/api/auto-check/start`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ participants })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setAutoCheckEnabled(true);
+          setAutoCheckInfo(prev => ({
+            ...(prev || { lastAutoRunAt: null, runCount: 0 }),
+            nextRunAt: data.nextRunAt,
+            participantCount: data.participantCount,
+            intervalMinutes: data.intervalMinutes
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Auto-check toggle error:', err);
     }
   };
 
@@ -572,6 +685,53 @@ export const AdminPanelPage: React.FC = () => {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          {/* Auto-Check Panel */}
+          <div className="glass-panel p-6 rounded-xl border border-purple-500/20">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-mono text-white uppercase tracking-widest">Автомат шалгалт</h2>
+              <button
+                onClick={handleToggleAutoCheck}
+                className={cn(
+                  "px-6 py-3 rounded-lg font-bold font-mono tracking-widest uppercase flex items-center gap-2 transition-all",
+                  autoCheckEnabled
+                    ? "bg-cyber-danger/20 border border-cyber-danger/50 text-cyber-danger hover:bg-cyber-danger hover:text-white"
+                    : "bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500 hover:text-white"
+                )}
+              >
+                {autoCheckEnabled ? (
+                  <><XCircle className="w-5 h-5" /> Зогсоох</>
+                ) : (
+                  <><RefreshCw className="w-5 h-5" /> 15 мин идэвхжүүлэх</>
+                )}
+              </button>
+            </div>
+
+            <p className="text-xs text-cyber-text-muted mb-4">
+              15 минут тутамд бүх оролцогчдын орчинг автоматаар шалгаж оноог шинэчилнэ.
+            </p>
+
+            {autoCheckEnabled && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-black/30 border border-cyber-border rounded-lg p-4 text-center">
+                  <p className="text-[10px] font-mono text-cyber-text-muted uppercase mb-1">Дараагийн шалгалт</p>
+                  <p className="text-2xl font-mono font-bold text-purple-400">{countdown || '--:--'}</p>
+                </div>
+                <div className="bg-black/30 border border-cyber-border rounded-lg p-4 text-center">
+                  <p className="text-[10px] font-mono text-cyber-text-muted uppercase mb-1">Давтамж</p>
+                  <p className="text-2xl font-mono font-bold text-white">{autoCheckInfo?.intervalMinutes || 15} мин</p>
+                </div>
+                <div className="bg-black/30 border border-cyber-border rounded-lg p-4 text-center">
+                  <p className="text-[10px] font-mono text-cyber-text-muted uppercase mb-1">Шалгасан удаа</p>
+                  <p className="text-2xl font-mono font-bold text-cyber-accent">{autoCheckInfo?.runCount || 0}</p>
+                </div>
+                <div className="bg-black/30 border border-cyber-border rounded-lg p-4 text-center">
+                  <p className="text-[10px] font-mono text-cyber-text-muted uppercase mb-1">Оролцогчид</p>
+                  <p className="text-2xl font-mono font-bold text-cyber-neon">{autoCheckInfo?.participantCount || 0}</p>
+                </div>
               </div>
             )}
           </div>
