@@ -7,8 +7,8 @@ import { motion } from 'motion/react';
 
 const navItems = [
   { to: '/', label: 'Хяналтын самбар', icon: LayoutDashboard },
-  { to: '/participants', label: 'Оролцогчид', icon: Users },
   { to: '/tasks', label: 'Даалгаврууд', icon: CheckSquare },
+  { to: '/participants', label: 'Оролцогчид', icon: Users },
   { to: '/admin', label: 'Удирдлагын төв', icon: ShieldAlert },
 ];
 

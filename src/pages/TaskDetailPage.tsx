@@ -43,7 +43,7 @@ export const TaskDetailPage: React.FC = () => {
           <div className="relative z-10">
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="px-3 py-1 rounded bg-black/40 border border-cyber-border text-xs font-mono uppercase tracking-widest text-cyber-text-muted">{task.category}</span>
-              <span className="px-3 py-1 rounded bg-black/40 border border-cyber-border text-xs font-mono uppercase tracking-widest text-cyber-text-muted">Target: {task.targetDevice}</span>
+              <span className="px-3 py-1 rounded bg-black/40 border border-cyber-border text-xs font-mono uppercase tracking-widest text-cyber-text-muted">Owner: {task.owner}</span>
             </div>
             <div className="flex justify-between items-start">
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">{task.title}</h1>
@@ -63,7 +63,7 @@ export const TaskDetailPage: React.FC = () => {
             <h2 className="text-lg font-mono text-white mb-4 uppercase tracking-widest flex items-center gap-2">
               <FileText className="w-5 h-5 text-cyber-accent" /> Даалгаврын тайлбар
             </h2>
-            <div className="text-cyber-text bg-black/20 p-6 rounded-lg border border-cyber-border leading-relaxed text-sm md:text-base">
+            <div className="text-cyber-text bg-black/20 p-6 rounded-lg border border-cyber-border leading-relaxed text-base md:text-lg">
               {task.description}
             </div>
           </section>

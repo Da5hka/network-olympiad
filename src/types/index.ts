@@ -2,7 +2,7 @@ export type CompetitionState = 'NOT_STARTED' | 'RUNNING' | 'FINISHED';
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard' | 'Expert';
 
-export type TaskCategory = 'Routing' | 'Switching' | 'Security' | 'Services' | 'Troubleshooting';
+export type TaskCategory = 'Troubleshooting' | 'Implementation' | 'Service';
 
 export interface Hint {
   id: string;
@@ -13,6 +13,7 @@ export interface Task {
   id: string;
   title: string;
   category: TaskCategory;
+  subCategory: string;
   difficulty: Difficulty;
   maxScore: number;
   description: string;
@@ -22,6 +23,8 @@ export interface Task {
   scoreValueHint: string;
   targetDevice: string;
   solversCount: number;
+  owner: string;
+  checkCommand: string;
 }
 
 export type ParticipantStatus = 'Online' | 'Offline' | 'Connecting' | 'Issues';

@@ -6,11 +6,11 @@ import { initialMockData } from '../data/mockData';
 interface AppContextType {
   state: AppState;
   setCompetitionState: (state: CompetitionState) => void;
-  updateParticipantScore: (participantId: string, taskId: string, score: number) => void;
+  updateParticipantScore: (participantId: string, taskId: string, score: number, secureToken?: string) => void;
   updateTask: (task: Task) => void;
   addParticipant: (participant: Omit<Participant, 'id' | 'totalScore' | 'taskScores' | 'lastUpdated'>) => void;
   updateDiagnostic: (diagnostic: RouterDiagnostic) => void;
-  loginAdmin: (passkey: string) => boolean;
+  loginAdmin: (passkey: string) => Promise<boolean>;
   logoutAdmin: () => void;
 }
 
@@ -19,16 +19,31 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(initialMockData);
 
-  const loginAdmin = (passkey: string) => {
-    // Hardcoded mock passkey
-    if (passkey === 'admin2026') {
-      setState(prev => ({ ...prev, isAdminAuthenticated: true }));
-      return true;
+  const loginAdmin = async (passkey: string) => {
+    try {
+      const BACKEND_URL = 'http://localhost:3001';
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passkey })
+      });
+
+      if (!res.ok) return false;
+
+      const { token } = await res.json();
+      if (token) {
+        sessionStorage.setItem('adminToken', token);
+        setState(prev => ({ ...prev, isAdminAuthenticated: true }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      return false;
     }
-    return false;
   };
 
   const logoutAdmin = () => {
+    sessionStorage.removeItem('adminToken');
     setState(prev => ({ ...prev, isAdminAuthenticated: false }));
   };
 
@@ -36,8 +51,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState((prev) => ({ ...prev, competitionState }));
   };
 
-  const updateParticipantScore = (participantId: string, taskId: string, score: number) => {
+  const updateParticipantScore = (participantId: string, taskId: string, score: number, secureToken?: string) => {
+    // SECURITY FIX: Prevent unauthorized score tampering from clients.
+    // Point updates from the router scanner must include a valid secure token (simulating HMAC signature).
+    if (secureToken !== 'router-scanner-secret-token') {
+      console.error('SECURITY WARNING: Unauthorized point update attempt rejected.');
+      return;
+    }
+
     setState((prev) => {
+      const task = prev.tasks.find(t => t.id === taskId);
+      if (!task) return prev;
+
+      // SECURITY BOUND CHECK: Ensure points cannot exceed the task's maximum limit.
+      const validatedScore = Math.min(Math.max(0, score), task.maxScore);
+
       return {
         ...prev,
         participants: prev.participants.map((p) => {
@@ -46,9 +74,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             let newTaskScores = [...p.taskScores];
             
             if (existingTaskScoreIndex >= 0) {
-              newTaskScores[existingTaskScoreIndex] = { ...newTaskScores[existingTaskScoreIndex], score };
+              newTaskScores[existingTaskScoreIndex] = { ...newTaskScores[existingTaskScoreIndex], score: validatedScore };
             } else {
-              newTaskScores.push({ taskId, score, completedAt: new Date().toISOString() });
+              newTaskScores.push({ taskId, score: validatedScore, completedAt: new Date().toISOString() });
             }
 
             const totalScore = newTaskScores.reduce((sum, ts) => sum + ts.score, 0);

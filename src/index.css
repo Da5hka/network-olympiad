@@ -16,6 +16,10 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+html {
+  font-size: 18px; /* Makes all text slightly bigger by scaling the rem root */
+}
+
 body {
   background-color: var(--color-cyber-bg);
   color: var(--color-cyber-text);

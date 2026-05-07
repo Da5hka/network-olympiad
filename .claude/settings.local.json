@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(node:*)"
+    ]
+  }
+}

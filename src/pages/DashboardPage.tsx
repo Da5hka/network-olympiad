@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../store/AppContext';
-import { Trophy, Activity, Target, Users, Medal, Zap } from 'lucide-react';
+import { Trophy, Target, Users, Medal, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -21,15 +21,8 @@ export const DashboardPage: React.FC = () => {
     <div className="space-y-8 pb-10">
       <header className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Live Scoreboard</h1>
-          <p className="text-cyber-text-muted">Real-time network olympiad telemetry</p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm font-mono text-cyber-text-muted uppercase tracking-widest mb-1">Status</p>
-          <div className="flex items-center justify-end gap-2 text-cyber-accent font-medium">
-            <Activity className="w-4 h-4 animate-pulse" />
-            LIVE
-          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Шууд оноон самбар</h1>
+          <p className="text-cyber-text-muted">Сүлжээний олимпиадын бодит цагийн мэдээлэл</p>
         </div>
       </header>
 
@@ -55,7 +48,7 @@ export const DashboardPage: React.FC = () => {
           { label: 'Participants', value: state.participants.length, icon: Users, color: 'text-cyber-accent' },
           { label: 'Available Tasks', value: state.tasks.filter(t => t.isAvailable).length, icon: Target, color: 'text-cyber-warning' },
           { label: 'Validations', value: totalSubmissions, icon: Zap, color: 'text-cyber-neon' },
-          { label: 'Current Leader', value: top3[0]?.name || '---', icon: Trophy, color: 'text-cyber-danger', valueClass: 'text-lg truncate' }
+          { label: 'Current Leader', value: top3[0]?.name || '---', icon: Trophy, color: 'text-cyber-danger', valueClass: 'text-base font-bold line-clamp-2 leading-tight' }
         ].map((stat, i) => (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -90,9 +83,9 @@ export const DashboardPage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-cyber-bg border-2 border-[#C0C0C0] shadow-[0_0_15px_rgba(192,192,192,0.5)] flex items-center justify-center mb-2 z-10">
                   <span className="text-2xl font-bold text-[#C0C0C0]">2</span>
                 </div>
-                <div className="text-center w-32">
-                  <p className="font-bold text-white truncate cursor-pointer hover:text-cyber-accent" onClick={() => navigate(`/participants/${top3[1].id}`)}>{top3[1].name}</p>
-                  <p className="text-sm font-mono text-[#C0C0C0]">{top3[1].totalScore} pts</p>
+                <div className="text-center w-full min-w-[120px] px-1">
+                  <p className="font-bold text-sm text-white break-words cursor-pointer hover:text-cyber-accent leading-tight" onClick={() => navigate(`/participants/${top3[1].id}`)}>{top3[1].name}</p>
+                  <p className="text-sm font-mono text-[#C0C0C0] mt-1">{top3[1].totalScore} pts</p>
                 </div>
               </div>
             </motion.div>
@@ -106,9 +99,9 @@ export const DashboardPage: React.FC = () => {
                 <div className="w-20 h-20 rounded-full bg-cyber-bg border-4 border-cyber-warning shadow-[0_0_20px_rgba(255,184,0,0.6)] flex items-center justify-center mb-2 z-10">
                   <span className="text-4xl font-bold text-cyber-warning">1</span>
                 </div>
-                <div className="text-center w-40">
-                  <p className="font-bold text-lg text-white truncate cursor-pointer hover:text-cyber-accent" onClick={() => navigate(`/participants/${top3[0].id}`)}>{top3[0].name}</p>
-                  <p className="text-base font-mono text-cyber-warning">{top3[0].totalScore} pts</p>
+                <div className="text-center w-full min-w-[140px] px-1">
+                  <p className="font-bold text-base text-white break-words cursor-pointer hover:text-cyber-accent leading-tight" onClick={() => navigate(`/participants/${top3[0].id}`)}>{top3[0].name}</p>
+                  <p className="text-base font-mono text-cyber-warning mt-1">{top3[0].totalScore} pts</p>
                 </div>
               </div>
             </motion.div>
@@ -121,9 +114,9 @@ export const DashboardPage: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-cyber-bg border-2 border-[#CD7F32] shadow-[0_0_15px_rgba(205,127,50,0.5)] flex items-center justify-center mb-2 z-10">
                   <span className="text-2xl font-bold text-[#CD7F32]">3</span>
                 </div>
-                <div className="text-center w-32">
-                  <p className="font-bold text-white truncate cursor-pointer hover:text-cyber-accent" onClick={() => navigate(`/participants/${top3[2].id}`)}>{top3[2].name}</p>
-                  <p className="text-sm font-mono text-[#CD7F32]">{top3[2].totalScore} pts</p>
+                <div className="text-center w-full min-w-[120px] px-1">
+                  <p className="font-bold text-sm text-white break-words cursor-pointer hover:text-cyber-accent leading-tight" onClick={() => navigate(`/participants/${top3[2].id}`)}>{top3[2].name}</p>
+                  <p className="text-sm font-mono text-[#CD7F32] mt-1">{top3[2].totalScore} pts</p>
                 </div>
               </div>
             </motion.div>
