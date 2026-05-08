@@ -43,7 +43,7 @@ const challenges = [
       {
         device: 'wan-rtr01',
         commands: ['show bgp all summary'],
-        matchRules: ['10.1.18.10', '17000', '2001:DB8:ABCD:17::10']
+        matchRules: ['10.1.18.10', '2001:DB8:ABCD:17::10', { type: 'not_contains', value: 'Active' }]
       }
     ]
   },
@@ -160,7 +160,7 @@ const challenges = [
     checks: [
       {
         device: 'Fusion-rtr01',
-        commands: ['show run | sec ospf'],
+        commands: ['show run | sec ospf 1'],
         matchRules: [
           'passive-interface default',
           'no passive-interface GigabitEthernet0/0.1010',
@@ -323,7 +323,7 @@ const challenges = [
       {
         device: 'corp-dsw02',
         commands: ['show standby vlan 20 | include State'],
-        matchRules: ['State is Active']
+        matchRules: ['State is Active', 'Priority 150']
       }
     ]
   },

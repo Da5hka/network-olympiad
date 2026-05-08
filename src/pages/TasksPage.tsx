@@ -1,9 +1,12 @@
 import React from 'react';
 import { useAppContext } from '../store/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Unlock, Users } from 'lucide-react';
+import { Lock, Unlock, Users, Download, FileText, Table } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { TaskCategory } from '../types';
+import topologyPdf from '../download/topology.pdf';
+import ipv4Plan from '../download/Copy of IPv4 address plan.xlsx';
+import ipv6Plan from '../download/Copy of IPv6 address plan.xlsx';
 
 export const TasksPage: React.FC = () => {
   const { state } = useAppContext();
@@ -37,6 +40,36 @@ export const TasksPage: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* GUIDE - Download files */}
+      <div className="glass-panel p-4 rounded-xl">
+        <h2 className="text-sm font-mono text-cyber-text-muted uppercase tracking-widest mb-3 flex items-center gap-2">
+          <Download className="w-4 h-4 text-cyber-accent" /> GUIDE
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <a href={topologyPdf} download="topology.pdf" className="flex items-center gap-3 p-3 rounded-lg border border-cyber-border bg-black/20 hover:bg-cyber-accent/10 hover:border-cyber-accent/50 transition-all group">
+            <FileText className="w-8 h-8 text-red-400 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-white group-hover:text-cyber-accent transition-colors">Topology</p>
+              <p className="text-[10px] text-cyber-text-muted">PDF</p>
+            </div>
+          </a>
+          <a href={ipv4Plan} download="IPv4 address plan.xlsx" className="flex items-center gap-3 p-3 rounded-lg border border-cyber-border bg-black/20 hover:bg-cyber-accent/10 hover:border-cyber-accent/50 transition-all group">
+            <Table className="w-8 h-8 text-green-400 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-white group-hover:text-cyber-accent transition-colors">IPv4 Address Plan</p>
+              <p className="text-[10px] text-cyber-text-muted">XLSX</p>
+            </div>
+          </a>
+          <a href={ipv6Plan} download="IPv6 address plan.xlsx" className="flex items-center gap-3 p-3 rounded-lg border border-cyber-border bg-black/20 hover:bg-cyber-accent/10 hover:border-cyber-accent/50 transition-all group">
+            <Table className="w-8 h-8 text-blue-400 shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-white group-hover:text-cyber-accent transition-colors">IPv6 Address Plan</p>
+              <p className="text-[10px] text-cyber-text-muted">XLSX</p>
+            </div>
+          </a>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {state.tasks.map(task => (

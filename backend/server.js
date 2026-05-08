@@ -274,6 +274,10 @@ function evaluateMatches(output, matchRules) {
       if (isNaN(num) || num < rule.minValue) {
         return false;
       }
+    } else if (rule.type === 'not_contains') {
+      if (cleanOutput.includes(normalizeWhitespace(rule.value))) {
+        return false;
+      }
     } else if (rule.type === 'count') {
       const escaped = normalizeWhitespace(rule.substring).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const matches = cleanOutput.match(new RegExp(escaped, 'g'));
