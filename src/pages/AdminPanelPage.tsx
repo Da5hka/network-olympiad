@@ -211,6 +211,9 @@ export const AdminPanelPage: React.FC = () => {
         for (const cr of result.challengeResults) {
           if (cr.passed && cr.points > 0) {
             updateParticipantScore(participantId, cr.challengeId, cr.points, 'router-scanner-secret-token');
+          } else if (!cr.passed) {
+            // Configuration changed to wrong — reduce points to 0
+            updateParticipantScore(participantId, cr.challengeId, 0, 'router-scanner-secret-token');
           }
         }
       }
@@ -282,6 +285,9 @@ export const AdminPanelPage: React.FC = () => {
         for (const cr of result.challengeResults) {
           if (cr.passed && cr.points > 0) {
             updateParticipantScore(participantId, cr.challengeId, cr.points, 'router-scanner-secret-token');
+          } else if (!cr.passed) {
+            // Configuration changed to wrong — reduce points to 0
+            updateParticipantScore(participantId, cr.challengeId, 0, 'router-scanner-secret-token');
           }
         }
       }
@@ -763,13 +769,13 @@ export const AdminPanelPage: React.FC = () => {
                 {autoCheckEnabled ? (
                   <><XCircle className="w-5 h-5" /> Зогсоох</>
                 ) : (
-                  <><RefreshCw className="w-5 h-5" /> 15 мин идэвхжүүлэх</>
+                  <><RefreshCw className="w-5 h-5" /> 30 мин идэвхжүүлэх</>
                 )}
               </button>
             </div>
 
             <p className="text-xs text-cyber-text-muted mb-4">
-              15 минут тутамд бүх оролцогчдын орчинг автоматаар шалгаж оноог шинэчилнэ.
+              30 минут тутамд бүх оролцогчдын орчинг автоматаар шалгаж оноог шинэчилнэ.
             </p>
 
             {autoCheckEnabled && (
@@ -780,7 +786,7 @@ export const AdminPanelPage: React.FC = () => {
                 </div>
                 <div className="bg-black/30 border border-cyber-border rounded-lg p-4 text-center">
                   <p className="text-[10px] font-mono text-cyber-text-muted uppercase mb-1">Давтамж</p>
-                  <p className="text-2xl font-mono font-bold text-white">{autoCheckInfo?.intervalMinutes || 15} мин</p>
+                  <p className="text-2xl font-mono font-bold text-white">{autoCheckInfo?.intervalMinutes || 30} мин</p>
                 </div>
                 <div className="bg-black/30 border border-cyber-border rounded-lg p-4 text-center">
                   <p className="text-[10px] font-mono text-cyber-text-muted uppercase mb-1">Шалгасан удаа</p>

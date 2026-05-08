@@ -222,12 +222,12 @@ const challenges = [
     checks: [
       {
         device: 'corp-dsw01',
-        commands: ['show run | sec inc router ospf 2'],
+        commands: ['show run | section router ospf 2'],
         matchRules: ['capability vrf-lite']
       },
       {
         device: 'corp-dsw01',
-        commands: ['show run | sec inc router ospf 3'],
+        commands: ['show run | section router ospf 3'],
         matchRules: ['capability vrf-lite']
       }
     ]

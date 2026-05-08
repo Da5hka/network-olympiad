@@ -12,7 +12,11 @@
       "Bash(netstat:*)",
       "Bash(taskkill:*)",
       "Bash(node:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "Bash(sshpass -p '6nts-78im-wp7k' ssh -o StrictHostKeyChecking=no scloud@36.50.7.44 \"cd /home/scloud/networkolym/network-olympiad/backend && grep ''test-eve'' server.js | head -3\")",
+      "Bash(ssh -o StrictHostKeyChecking=no scloud@36.50.7.44 \"curl -s -X POST http://localhost:3001/api/auth/login -H ''Content-Type: application/json'' -d ''{\"\"passkey\"\":\"\"netolympiad2026\"\"}''\")",
+      "Bash(ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes scloud@36.50.7.44 \"node -e \"\"console.log\\(require\\(''crypto''\\).createHash\\(''sha256''\\).update\\(''netolympiad2026''\\).digest\\(''hex''\\)\\)\"\"\")",
+      "Bash(ssh:*)"
     ]
   }
 }

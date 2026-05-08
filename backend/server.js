@@ -134,7 +134,7 @@ let checkState = {
 
 // ─── Auto-check state ───────────────────────────────────────────────────────
 
-const AUTO_CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
+const AUTO_CHECK_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 let autoCheckState = {
   enabled: false,
@@ -193,17 +193,25 @@ function stopAutoCheck() {
 
 // ─── Match evaluation ───────────────────────────────────────────────────────
 
+function stripAnsi(str) {
+  return str
+    .replace(/\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\].*?(?:\x07|\x1B\\))/g, '')
+    .replace(/\r/g, '');
+}
+
 function evaluateMatches(output, matchRules) {
   if (!output || !matchRules) return false;
 
+  const cleanOutput = stripAnsi(output);
+
   for (const rule of matchRules) {
     if (typeof rule === 'string') {
-      if (!output.includes(rule)) {
+      if (!cleanOutput.includes(rule)) {
         return false;
       }
     } else if (rule.type === 'regex_gt') {
       const regex = new RegExp(rule.pattern);
-      const match = output.match(regex);
+      const match = cleanOutput.match(regex);
       if (!match || !match[1]) {
         return false;
       }
@@ -213,7 +221,7 @@ function evaluateMatches(output, matchRules) {
       }
     } else if (rule.type === 'count') {
       const escaped = rule.substring.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const matches = output.match(new RegExp(escaped, 'g'));
+      const matches = cleanOutput.match(new RegExp(escaped, 'g'));
       if (!matches || matches.length < rule.minCount) {
         return false;
       }
@@ -361,10 +369,11 @@ function checkParticipantEnv(eveIp) {
             continue;
           }
 
+          const cleanedOutput = stripAnsi(result.output);
           const passed = evaluateMatches(result.output, check.matchRules);
           console.log(`[CHECK] ${challenge.id} | ${check.device} | ${passed ? 'PASS' : 'FAIL'} | matchRules: ${JSON.stringify(check.matchRules)}`);
           if (!passed) {
-            console.log(`[CHECK] ${challenge.id} | ${check.device} | Output (first 500 chars): ${result.output.substring(0, 500).replace(/\r?\n/g, '\\n')}`);
+            console.log(`[CHECK] ${challenge.id} | ${check.device} | Output (first 500 chars): ${cleanedOutput.substring(0, 500).replace(/\n/g, '\\n')}`);
           }
           checkDetails.push({
             device: check.device,
