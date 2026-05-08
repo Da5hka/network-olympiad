@@ -350,6 +350,7 @@ function checkParticipantEnv(eveIp) {
           const result = await runDeviceShell(jumpHost, deviceInfo.port, check.commands);
 
           if (!result.success) {
+            console.log(`[CHECK] ${challenge.id} | ${check.device} | FAIL: ${result.error}`);
             checkDetails.push({
               device: check.device,
               passed: false,
@@ -361,6 +362,10 @@ function checkParticipantEnv(eveIp) {
           }
 
           const passed = evaluateMatches(result.output, check.matchRules);
+          console.log(`[CHECK] ${challenge.id} | ${check.device} | ${passed ? 'PASS' : 'FAIL'} | matchRules: ${JSON.stringify(check.matchRules)}`);
+          if (!passed) {
+            console.log(`[CHECK] ${challenge.id} | ${check.device} | Output (first 500 chars): ${result.output.substring(0, 500).replace(/\r?\n/g, '\\n')}`);
+          }
           checkDetails.push({
             device: check.device,
             passed,
@@ -395,21 +400,24 @@ function checkParticipantEnv(eveIp) {
       });
     });
 
-    jumpHost.on('error', () => {
+    jumpHost.on('error', (err) => {
       clearTimeout(overallTimeout);
+      const reason = err ? err.message || err.level || String(err) : 'Unknown';
+      console.error(`[EVE] Connection FAILED to ${eveIp} | Reason: ${reason}`);
       resolve({
         eveIp,
-        error: 'EVE connection failed',
+        error: `EVE connection failed: ${reason}`,
         challengeResults: challenges.map(c => ({
           challengeId: c.id,
           passed: false,
           points: 0,
           maxPoints: c.points,
-          error: 'EVE unreachable'
+          error: `EVE unreachable: ${reason}`
         }))
       });
     });
 
+    console.log(`[EVE] Connecting to ${eveIp}:22 as ${EVE_SERVER_USER}...`);
     jumpHost.connect({
       host: eveIp,
       port: 22,
@@ -650,6 +658,84 @@ app.post('/api/ping-all', requireAuth, async (req, res) => {
 
   const results = await pingAllParticipants(participants);
   res.json({ results, checkedAt: new Date().toISOString() });
+});
+
+// ─── Diagnostic test endpoint ────────────────────────────────────────────────
+
+app.post('/api/test-eve', requireAuth, async (req, res) => {
+  const { ip } = req.body;
+  if (!ip || !isValidIp(ip)) {
+    return res.status(400).json({ error: 'Valid IP is required' });
+  }
+
+  console.log(`[TEST] Testing SSH connection to ${ip}:22 as ${EVE_SERVER_USER}...`);
+
+  const result = await new Promise((resolve) => {
+    const client = new Client();
+    const timeout = setTimeout(() => {
+      try { client.end(); } catch (e) {}
+      resolve({ success: false, error: 'Connection timeout (10s)' });
+    }, 10000);
+
+    client.on('ready', () => {
+      clearTimeout(timeout);
+      // Try to also test a port forward to verify TCP forwarding works
+      client.forwardOut('127.0.0.1', 0, DEVICE_IP, 30003, (err, stream) => {
+        if (err) {
+          client.end();
+          return resolve({ success: true, sshOk: true, forwardOk: false, error: `SSH OK but port forward failed: ${err.message}` });
+        }
+        // Port forward works, try device SSH
+        const device = new Client();
+        const devTimeout = setTimeout(() => {
+          try { device.end(); stream.destroy(); client.end(); } catch (e) {}
+          resolve({ success: true, sshOk: true, forwardOk: true, deviceOk: false, error: 'Device SSH timeout' });
+        }, 10000);
+
+        device.on('ready', () => {
+          clearTimeout(devTimeout);
+          device.end();
+          client.end();
+          resolve({ success: true, sshOk: true, forwardOk: true, deviceOk: true, message: 'Full chain OK: Backend → EVE → Device' });
+        });
+
+        device.on('error', (devErr) => {
+          clearTimeout(devTimeout);
+          client.end();
+          resolve({ success: true, sshOk: true, forwardOk: true, deviceOk: false, error: `Device SSH failed: ${devErr.message}` });
+        });
+
+        device.connect({
+          sock: stream,
+          username: DEVICE_USER,
+          password: DEVICE_PASS,
+          readyTimeout: 8000,
+          algorithms: {
+            kex: ['diffie-hellman-group-exchange-sha256', 'diffie-hellman-group14-sha256', 'diffie-hellman-group14-sha1'],
+            cipher: ['aes128-ctr', 'aes192-ctr', 'aes256-ctr', 'aes128-cbc', 'aes256-cbc'],
+            serverHostKey: ['rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384'],
+            hmac: ['hmac-sha2-256', 'hmac-sha2-512']
+          }
+        });
+      });
+    });
+
+    client.on('error', (err) => {
+      clearTimeout(timeout);
+      resolve({ success: false, error: `SSH failed: ${err.message || err.level || String(err)}` });
+    });
+
+    client.connect({
+      host: ip,
+      port: 22,
+      username: EVE_SERVER_USER,
+      password: EVE_SERVER_PASS,
+      readyTimeout: 8000
+    });
+  });
+
+  console.log(`[TEST] Result for ${ip}:`, JSON.stringify(result));
+  res.json(result);
 });
 
 // ─── Auto-check endpoints ───────────────────────────────────────────────────

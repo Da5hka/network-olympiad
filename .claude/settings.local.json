@@ -11,7 +11,8 @@
       "Bash(findstr:*)",
       "Bash(netstat:*)",
       "Bash(taskkill:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx vite build)"
     ]
   }
 }

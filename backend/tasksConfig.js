@@ -3,15 +3,15 @@
 // All devices are accessed via the EVE host IP, only port differs
 const DEVICE_IP = '10.16.15.4';
 const DEVICE_MAP = {
-  'corp-dsw02':   { port: 30002 },
-  'corp-dsw01':   { port: 30003 },
-  'corp-esw01':   { port: 30004 },
-  'corp-esw02':   { port: 30005 },
-  'corp-esw03':   { port: 30006 },
-  'Br1GW':        { port: 30008 },
+  'corp-dsw02': { port: 30002 },
+  'corp-dsw01': { port: 30003 },
+  'corp-esw01': { port: 30004 },
+  'corp-esw02': { port: 30005 },
+  'corp-esw03': { port: 30006 },
+  'Br1GW': { port: 30008 },
   'Fusion-rtr01': { port: 30013 },
-  'wan-rtr01':    { port: 30014 },
-  'wan-rtr02':    { port: 30015 },
+  'wan-rtr01': { port: 30014 },
+  'wan-rtr02': { port: 30015 },
   'Fusion-rtr02': { port: 30016 },
 };
 
@@ -45,18 +45,18 @@ const challenges = [
       {
         device: 'wan-rtr01',
         commands: [
-          'show ip bgp neighbors 202.43.65.2 routes',
-          'show bgp ipv6 unicast neighbors 2001:DB9:0:10::3 routes'
+          'show ip bgp neighbors 202.43.65.1 advertised-routes',
+          'show bgp ipv6 unicast neighbors 2001:DB9:0:10::2 advertised-routes'
         ],
-        matchRules: ['133.34.12.0/24', '133.34.13.0/24', '2001:DB8::/32']
+        matchRules: ['133.34.12.0/24', '133.34.13.0/24', ' 0.0.0.0', '32768', '2001:DB8::/32']
       },
       {
         device: 'wan-rtr02',
         commands: [
-          'show ip bgp neighbors 103.88.34.2 routes',
-          'show bgp ipv6 unicast neighbors 2001:D29:0:10::3 routes'
+          'show ip bgp neighbors 103.88.34.1 advertised-routes',
+          'show bgp ipv6 unicast neighbors 2001:D29:0:10::2 advertised-routes'
         ],
-        matchRules: ['133.34.12.0/24', '133.34.13.0/24', '2001:DB8::/32']
+        matchRules: ['133.34.12.0/24', '133.34.13.0/24', ' 0.0.0.0', '32768', '2001:DB8::/32']
       }
     ]
   },
@@ -94,6 +94,7 @@ const challenges = [
           '2001:D29::/32',
           'via 2001:DB8:ABCD:17::8',
           '2001:DB9::/32',
+          'via FE80::5200:FF:FE0E:0',
           'GigabitEthernet0/2'
         ]
       }
@@ -235,35 +236,27 @@ const challenges = [
     id: 'c11',
     category: 'Troubleshooting',
     subCategory: 'NAT',
-    description: 'Байгууллагын дотоод сүлжээнээс(FinDep, TechDep) интернэт холбогдохгүй байгаа асуудлыг шийднэ үү? (Inside interfaces)',
+    description: 'Байгууллагын дотоод сүлжээнээс(FinDep, TechDep) интернэт холбогдохгүй байгаа асуудлыг шийднэ үү?',
     owner: 'Altai',
-    points: 1,
+    points: 2,
     checks: [
       {
         device: 'wan-rtr01',
         commands: ['show ip nat statistics'],
         matchRules: [
-          'Inside interfaces:',
           'GigabitEthernet0/0.300',
-          'GigabitEthernet0/1.300'
+          'GigabitEthernet0/1.300',
+          'GigabitEthernet0/2'
         ]
-      }
-    ]
-  },
-  {
-    id: 'c12',
-    category: 'Troubleshooting',
-    subCategory: 'NAT',
-    description: 'Байгууллагын дотоод сүлжээнээс(FinDep, TechDep) интернэт холбогдохгүй байгаа асуудлыг шийднэ үү? (ACL)',
-    owner: 'Altai',
-    points: 1,
-    checks: [
+      },
       {
         device: 'wan-rtr01',
-        commands: ['show ip nat statistics'],
+        commands: ['show run | inc access-list'],
         matchRules: [
-          'access-list',
-          'interface GigabitEthernet0/2'
+          'deny ip 10.1.1.0 0.0.0.255 10.1.8.0 0.0.0.255',
+          'deny ip 10.1.2.0 0.0.0.255 10.1.8.0 0.0.0.255',
+          'permit ip 10.1.1.0 0.0.0.255 any',
+          'permit ip 10.1.2.0 0.0.0.255 any'
         ]
       }
     ]
@@ -350,7 +343,7 @@ const challenges = [
     id: 'c18',
     category: 'Service',
     subCategory: 'TFTP',
-    description: 'Corp-esw03 дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFTP Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ',
+    description: 'Corp-esw#2 ийн дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFPT Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ. corp-esw03-confg',
     owner: 'Byambaa',
     points: 2,
     checks: [

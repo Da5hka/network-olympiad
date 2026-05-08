@@ -176,37 +176,20 @@ export const initialMockData: AppState = {
     },
     {
       id: 'c11',
-      title: 'NAT-1',
+      title: 'NAT',
       category: 'Troubleshooting',
       subCategory: 'NAT',
-      difficulty: 'Easy',
-      maxScore: 1,
+      difficulty: 'Medium',
+      maxScore: 2,
       description: 'Байгууллагын дотоод сүлжээнээс(FinDep, TechDep) интернэт холбогдохгүй байгаа асуудлыг шийднэ үү?',
       hints: [],
       writeup: '',
       isAvailable: true,
-      scoreValueHint: '1 оноо - NAT inside interfaces зөв',
+      scoreValueHint: '2 оноо - NAT inside interfaces, ACL зөв',
       targetDevice: 'wan-rtr01',
       solversCount: 0,
       owner: 'Altai',
-      checkCommand: 'show ip nat statistics',
-    },
-    {
-      id: 'c12',
-      title: 'NAT-2',
-      category: 'Troubleshooting',
-      subCategory: 'NAT',
-      difficulty: 'Easy',
-      maxScore: 1,
-      description: 'Байгууллагын дотоод сүлжээнээс(FinDep, TechDep) интернэт холбогдохгүй байгаа асуудлыг шийднэ үү?',
-      hints: [],
-      writeup: '',
-      isAvailable: true,
-      scoreValueHint: '1 оноо - NAT ACL зөв',
-      targetDevice: 'wan-rtr01',
-      solversCount: 0,
-      owner: 'Altai',
-      checkCommand: 'show ip nat statistics',
+      checkCommand: 'show ip nat statistics / show run | inc access-list',
     },
     {
       id: 'c13',
@@ -300,7 +283,7 @@ export const initialMockData: AppState = {
       subCategory: 'TFTP',
       difficulty: 'Medium',
       maxScore: 2,
-      description: 'Corp-esw03 дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFTP Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ',
+      description: 'Corp-esw#2 ийн дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFPT Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ. corp-esw03-confg',
       hints: [],
       writeup: '',
       isAvailable: true,
@@ -347,7 +330,7 @@ export const initialMockData: AppState = {
   ],
   participants: [
     {
-      id: 'p1', name: 'Содном Тэлмэн', organization: 'МУИС', category: 'Student', routerNumber: 'R01', routerIp: '10.16.15.3', totalScore: 0,
+      id: 'p1', name: 'Содном Тэлмэн', organization: 'МУИС', category: 'Student', routerNumber: 'R01', routerIp: '10.16.16.11', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
@@ -465,6 +448,10 @@ export const initialMockData: AppState = {
     {
       id: 'p30', name: 'Бат-Эрдэнэ Эрдэнэбат', organization: 'ШУТИС, МХТС', category: 'Engineer', routerNumber: 'R30', routerIp: '10.16.16.40', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
+    },
+    {
+      id: 'p31', name: 'dashka', organization: 'Admin', category: 'Engineer', routerNumber: 'R31', routerIp: '10.16.15.3', totalScore: 0,
+      taskScores: [], status: 'Connecting', lastUpdated: '2026-05-07T00:00:00Z'
     }
   ],
   diagnostics: []

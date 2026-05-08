@@ -202,7 +202,7 @@ export const AdminPanelPage: React.FC = () => {
   const applyCheckResults = (results: Record<string, CheckResult>) => {
     for (const [participantId, result] of Object.entries(results)) {
       // Update participant connection status based on check result
-      if (result.error === 'EVE connection failed' || result.error === 'EVE environment timeout') {
+      if (result.error && (result.error.startsWith('EVE connection failed') || result.error.startsWith('EVE environment timeout'))) {
         updateParticipantStatus(participantId, 'Offline');
       } else if (result.challengeResults) {
         const hasErrors = result.challengeResults.some((cr: any) => cr.checks?.some((c: any) => c.error && c.error !== 'Output did not match expected patterns'));
@@ -319,14 +319,14 @@ export const AdminPanelPage: React.FC = () => {
     setIsPinging(false);
   };
 
-  // Auto-ping every 60 seconds when on diagnostics tab
+  // Auto-ping every 60 seconds (runs regardless of active tab)
   useEffect(() => {
-    if (activeTab !== 'diagnostics' || !state.isAdminAuthenticated) return;
+    if (!state.isAdminAuthenticated) return;
 
     handlePingAll();
     const interval = setInterval(handlePingAll, 60000);
     return () => clearInterval(interval);
-  }, [activeTab, state.isAdminAuthenticated]);
+  }, [state.isAdminAuthenticated]);
 
   const handleToggleAutoCheck = async () => {
     try {
