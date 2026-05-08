@@ -84,8 +84,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       fetch('http://localhost:3001/api/health', {
         headers: { 'Authorization': `Bearer ${token}` }
       }).catch(() => {});
-      // Token validity is checked on actual API calls; if expired, user gets logged out naturally
     }
+  }, []);
+
+  // Poll backend scores so all users see the same scores
+  useEffect(() => {
+    const BACKEND_URL = 'http://localhost:3001';
+
+    const fetchScores = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/scores`);
+        if (!res.ok) return;
+        const backendScores: Record<string, { taskScores: { taskId: string; score: number; completedAt: string }[]; totalScore: number; name?: string; lastUpdated?: string }> = await res.json();
+
+        setState(prev => {
+          let changed = false;
+          const newParticipants = prev.participants.map(p => {
+            const remote = backendScores[p.id];
+            if (!remote) return p;
+            // Only update if backend has newer data
+            if (remote.lastUpdated && p.lastUpdated && remote.lastUpdated <= p.lastUpdated) return p;
+            changed = true;
+            return {
+              ...p,
+              taskScores: remote.taskScores || p.taskScores,
+              totalScore: remote.totalScore ?? p.totalScore,
+              lastUpdated: remote.lastUpdated || p.lastUpdated
+            };
+          });
+          if (!changed) return prev;
+          saveParticipantData(newParticipants);
+          return { ...prev, participants: newParticipants };
+        });
+      } catch {}
+    };
+
+    fetchScores();
+    const interval = setInterval(fetchScores, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const loginAdmin = async (passkey: string) => {

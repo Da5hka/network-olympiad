@@ -4,8 +4,35 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { Client } = require('ssh2');
 const { challenges, DEVICE_MAP, DEVICE_IP } = require('./tasksConfig');
+
+// ─── Persistent score storage ───────────────────────────────────────────────
+const SCORES_FILE = path.join(__dirname, 'scores.json');
+
+function loadScores() {
+  try {
+    if (fs.existsSync(SCORES_FILE)) {
+      return JSON.parse(fs.readFileSync(SCORES_FILE, 'utf8'));
+    }
+  } catch (e) {
+    console.error('[SCORES] Failed to load scores file:', e.message);
+  }
+  return {};
+}
+
+function saveScores(scores) {
+  try {
+    fs.writeFileSync(SCORES_FILE, JSON.stringify(scores, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[SCORES] Failed to save scores file:', e.message);
+  }
+}
+
+// participantScores: { [participantId]: { taskScores: [{taskId, score, completedAt}], totalScore, lastUpdated } }
+let participantScores = loadScores();
 
 const app = express();
 
@@ -49,8 +76,8 @@ const checkLimiter = rateLimit({
   message: { error: 'Check rate limit exceeded. Try again later.' }
 });
 
-// Session duration: 6 hours
-const SESSION_DURATION_MS = 6 * 60 * 60 * 1000;
+// Session duration: 7 days
+const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 // ─── Configuration from environment variables ───────────────────────────────
 
@@ -305,17 +332,20 @@ function runDeviceShell(jumpHost, devicePort, commands) {
           kex: [
             'diffie-hellman-group-exchange-sha256',
             'diffie-hellman-group14-sha256',
-            'diffie-hellman-group14-sha1'
+            'diffie-hellman-group14-sha1',
+            'diffie-hellman-group-exchange-sha1',
+            'diffie-hellman-group1-sha1'
           ],
           cipher: [
             'aes128-ctr', 'aes192-ctr', 'aes256-ctr',
-            'aes128-cbc', 'aes256-cbc'
+            'aes128-cbc', 'aes192-cbc', 'aes256-cbc',
+            '3des-cbc'
           ],
           serverHostKey: [
-            'rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa',
+            'rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa', 'ssh-dss',
             'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384'
           ],
-          hmac: ['hmac-sha2-256', 'hmac-sha2-512']
+          hmac: ['hmac-sha2-256', 'hmac-sha2-512', 'hmac-sha1', 'hmac-md5']
         }
       });
     });
@@ -492,6 +522,32 @@ async function pingAllParticipants(participants) {
   return results;
 }
 
+// ─── Score update from check results ────────────────────────────────────────
+
+function updateScoresFromResult(participantId, participantName, challengeResults) {
+  if (!challengeResults || !participantId) return;
+
+  const existing = participantScores[participantId] || { taskScores: [], totalScore: 0, name: '' };
+  existing.name = participantName || existing.name;
+  const taskScores = [...existing.taskScores];
+
+  for (const cr of challengeResults) {
+    const idx = taskScores.findIndex(ts => ts.taskId === cr.challengeId);
+    const score = cr.passed ? cr.points : 0;
+    if (idx >= 0) {
+      taskScores[idx] = { ...taskScores[idx], score, completedAt: new Date().toISOString() };
+    } else {
+      taskScores.push({ taskId: cr.challengeId, score, completedAt: new Date().toISOString() });
+    }
+  }
+
+  existing.taskScores = taskScores;
+  existing.totalScore = taskScores.reduce((sum, ts) => sum + ts.score, 0);
+  existing.lastUpdated = new Date().toISOString();
+  participantScores[participantId] = existing;
+  saveScores(participantScores);
+}
+
 // ─── Run checks with concurrency limit ──────────────────────────────────────
 
 async function runAllChecks(participants) {
@@ -514,6 +570,7 @@ async function runAllChecks(participants) {
           checkedAt: new Date().toISOString()
         };
         checkState.progress.completed++;
+        updateScoresFromResult(p.id, p.name, result.challengeResults);
         console.log(`[${checkState.progress.completed}/${checkState.progress.total}] Checked ${p.name}: ${result.totalScore || 0} pts`);
       });
     });
@@ -644,6 +701,7 @@ app.post('/api/check-participant', requireAuth, checkLimiter, async (req, res) =
 
   if (participantId) {
     checkState.results[participantId] = fullResult;
+    updateScoresFromResult(participantId, name, result.challengeResults);
   }
 
   res.json(fullResult);
@@ -724,10 +782,10 @@ app.post('/api/test-eve', requireAuth, async (req, res) => {
           password: DEVICE_PASS,
           readyTimeout: 8000,
           algorithms: {
-            kex: ['diffie-hellman-group-exchange-sha256', 'diffie-hellman-group14-sha256', 'diffie-hellman-group14-sha1'],
-            cipher: ['aes128-ctr', 'aes192-ctr', 'aes256-ctr', 'aes128-cbc', 'aes256-cbc'],
-            serverHostKey: ['rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384'],
-            hmac: ['hmac-sha2-256', 'hmac-sha2-512']
+            kex: ['diffie-hellman-group-exchange-sha256', 'diffie-hellman-group14-sha256', 'diffie-hellman-group14-sha1', 'diffie-hellman-group-exchange-sha1', 'diffie-hellman-group1-sha1'],
+            cipher: ['aes128-ctr', 'aes192-ctr', 'aes256-ctr', 'aes128-cbc', 'aes192-cbc', 'aes256-cbc', '3des-cbc'],
+            serverHostKey: ['rsa-sha2-512', 'rsa-sha2-256', 'ssh-rsa', 'ssh-dss', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384'],
+            hmac: ['hmac-sha2-256', 'hmac-sha2-512', 'hmac-sha1', 'hmac-md5']
           }
         });
       });
@@ -790,6 +848,11 @@ app.post('/api/auto-check/start', requireAuth, (req, res) => {
 app.post('/api/auto-check/stop', requireAuth, (req, res) => {
   stopAutoCheck();
   res.json({ message: 'Auto-check disabled' });
+});
+
+// Public scores endpoint (no auth - all users can see scores)
+app.get('/api/scores', (req, res) => {
+  res.json(participantScores);
 });
 
 // Health check (no auth needed)
