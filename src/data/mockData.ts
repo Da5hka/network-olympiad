@@ -330,123 +330,123 @@ export const initialMockData: AppState = {
   ],
   participants: [
     {
-      id: 'p1', name: 'Содном Тэлмэн', organization: 'МУИС', category: 'Student', routerNumber: 'R01', routerIp: '10.16.16.11', totalScore: 0,
+      id: 'p1', name: 'Содном Тэлмэн', organization: 'МУИС', category: 'Student', routerNumber: 'R01', routerIp: '10.16.15.11', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p2', name: 'Болд Бэлгүдэй', organization: 'МУИС', category: 'Student', routerNumber: 'R02', routerIp: '10.16.16.12', totalScore: 0,
+      id: 'p2', name: 'Болд Бэлгүдэй', organization: 'МУИС', category: 'Student', routerNumber: 'R02', routerIp: '10.16.15.12', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:22:00Z'
     },
     {
-      id: 'p3', name: 'Эрдэнэтөгс Цэнгүүн', organization: 'МУИС', category: 'Student', routerNumber: 'R03', routerIp: '10.16.16.13', totalScore: 0,
+      id: 'p3', name: 'Эрдэнэтөгс Цэнгүүн', organization: 'МУИС', category: 'Student', routerNumber: 'R03', routerIp: '10.16.15.13', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:21:00Z'
     },
     {
-      id: 'p4', name: 'Баярсайхан Энхмандах', organization: 'ШУТИС', category: 'Student', routerNumber: 'R04', routerIp: '10.16.16.14', totalScore: 0,
+      id: 'p4', name: 'Баярсайхан Энхмандах', organization: 'ШУТИС', category: 'Student', routerNumber: 'R04', routerIp: '10.16.15.14', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:15:00Z'
     },
     {
-      id: 'p5', name: 'Пүрэвдорж Тэмүүжин', organization: 'МУИС', category: 'Student', routerNumber: 'R05', routerIp: '10.16.16.15', totalScore: 0,
+      id: 'p5', name: 'Пүрэвдорж Тэмүүжин', organization: 'МУИС', category: 'Student', routerNumber: 'R05', routerIp: '10.16.15.15', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:21:30Z'
     },
     {
-      id: 'p6', name: 'Энхтөр Мөнх-Оргил', organization: 'ШУТИС', category: 'Student', routerNumber: 'R06', routerIp: '10.16.16.16', totalScore: 0,
+      id: 'p6', name: 'Энхтөр Мөнх-Оргил', organization: 'ШУТИС', category: 'Student', routerNumber: 'R06', routerIp: '10.16.15.16', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:18:00Z'
     },
     {
-      id: 'p7', name: 'Эрдэнэбаяр Бумбаяр', organization: 'ШУТИС', category: 'Student', routerNumber: 'R07', routerIp: '10.16.16.17', totalScore: 0,
+      id: 'p7', name: 'Эрдэнэбаяр Бумбаяр', organization: 'ШУТИС', category: 'Student', routerNumber: 'R07', routerIp: '10.16.15.17', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:00:00Z'
     },
     {
-      id: 'p8', name: 'Алтанбаяр Номин-Эрдэнэ', organization: 'ШУТИС', category: 'Student', routerNumber: 'R08', routerIp: '10.16.16.18', totalScore: 0,
+      id: 'p8', name: 'Алтанбаяр Номин-Эрдэнэ', organization: 'ШУТИС', category: 'Student', routerNumber: 'R08', routerIp: '10.16.15.18', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:22:15Z'
     },
     {
-      id: 'p9', name: 'Галбадрах Мөнхтулга', organization: 'ШУТИС', category: 'Student', routerNumber: 'R09', routerIp: '10.16.16.19', totalScore: 0,
+      id: 'p9', name: 'Галбадрах Мөнхтулга', organization: 'ШУТИС', category: 'Student', routerNumber: 'R09', routerIp: '10.16.15.19', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:15:00Z'
     },
     {
-      id: 'p10', name: 'Мөнхбаатар Сугарбаяр', organization: 'МУИС', category: 'Student', routerNumber: 'R10', routerIp: '10.16.16.20', totalScore: 0,
+      id: 'p10', name: 'Мөнхбаатар Сугарбаяр', organization: 'МУИС', category: 'Student', routerNumber: 'R10', routerIp: '10.16.15.20', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:45Z'
     },
     {
-      id: 'p11', name: 'Зундуй Сүхбат', organization: 'ШУТИС', category: 'Student', routerNumber: 'R11', routerIp: '10.16.16.21', totalScore: 0,
+      id: 'p11', name: 'Зундуй Сүхбат', organization: 'ШУТИС', category: 'Student', routerNumber: 'R11', routerIp: '10.16.15.21', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:22:30Z'
     },
     {
-      id: 'p12', name: 'Пүрэвтогоо Оюун-Эрдэнэ', organization: 'МУИС', category: 'Student', routerNumber: 'R12', routerIp: '10.16.16.22', totalScore: 0,
+      id: 'p12', name: 'Пүрэвтогоо Оюун-Эрдэнэ', organization: 'МУИС', category: 'Student', routerNumber: 'R12', routerIp: '10.16.15.22', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:19:00Z'
     },
     {
-      id: 'p13', name: 'Ганпүрэв Мөнхжаргал', organization: 'МУИС', category: 'Student', routerNumber: 'R13', routerIp: '10.16.16.23', totalScore: 0,
+      id: 'p13', name: 'Ганпүрэв Мөнхжаргал', organization: 'МУИС', category: 'Student', routerNumber: 'R13', routerIp: '10.16.15.23', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p14', name: 'Бат-Эрдэнэ Бадрал', organization: 'ШУТИС', category: 'Student', routerNumber: 'R14', routerIp: '10.16.16.24', totalScore: 0,
+      id: 'p14', name: 'Бат-Эрдэнэ Бадрал', organization: 'ШУТИС', category: 'Student', routerNumber: 'R14', routerIp: '10.16.15.24', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p15', name: 'Тайван Төржавхлан', organization: 'МУИС', category: 'Student', routerNumber: 'R15', routerIp: '10.16.16.25', totalScore: 0,
+      id: 'p15', name: 'Тайван Төржавхлан', organization: 'МУИС', category: 'Student', routerNumber: 'R15', routerIp: '10.16.15.25', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p16', name: 'Дашдорж Онон', organization: 'МУИС', category: 'Student', routerNumber: 'R16', routerIp: '10.16.16.26', totalScore: 0,
+      id: 'p16', name: 'Дашдорж Онон', organization: 'МУИС', category: 'Student', routerNumber: 'R16', routerIp: '10.16.15.26', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p17', name: 'Батбаясах Ган-Эрдэнэ', organization: 'ШУТИС', category: 'Student', routerNumber: 'R17', routerIp: '10.16.16.27', totalScore: 0,
+      id: 'p17', name: 'Батбаясах Ган-Эрдэнэ', organization: 'ШУТИС', category: 'Student', routerNumber: 'R17', routerIp: '10.16.15.27', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p18', name: 'Батхүрэл Болорсүх', organization: 'МУИС', category: 'Student', routerNumber: 'R18', routerIp: '10.16.16.28', totalScore: 0,
+      id: 'p18', name: 'Батхүрэл Болорсүх', organization: 'МУИС', category: 'Student', routerNumber: 'R18', routerIp: '10.16.15.28', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p19', name: 'Уугантогтох Мөнх-Од', organization: 'ШУТИС', category: 'Student', routerNumber: 'R19', routerIp: '10.16.16.29', totalScore: 0,
+      id: 'p19', name: 'Уугантогтох Мөнх-Од', organization: 'ШУТИС', category: 'Student', routerNumber: 'R19', routerIp: '10.16.15.29', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p20', name: 'Батболд Амгалан', organization: 'ШМТИС', category: 'Student', routerNumber: 'R20', routerIp: '10.16.16.30', totalScore: 0,
+      id: 'p20', name: 'Батболд Амгалан', organization: 'ШМТИС', category: 'Student', routerNumber: 'R20', routerIp: '10.16.15.30', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p21', name: 'Ганбаяр Билгүүнбилэг', organization: 'Бодь Электроникс ХХК', category: 'Engineer', routerNumber: 'R21', routerIp: '10.16.16.31', totalScore: 0,
+      id: 'p21', name: 'Ганбаяр Билгүүнбилэг', organization: 'Бодь Электроникс ХХК', category: 'Engineer', routerNumber: 'R21', routerIp: '10.16.15.31', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p22', name: 'Дэлгэрсайхан Амарсанааа', organization: 'Дөл Судар ХХК', category: 'Engineer', routerNumber: 'R22', routerIp: '10.16.16.32', totalScore: 0,
+      id: 'p22', name: 'Дэлгэрсайхан Амарсанааа', organization: 'Дөл Судар ХХК', category: 'Engineer', routerNumber: 'R22', routerIp: '10.16.15.32', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p23', name: 'Лхамгарав Ариунхишиг', organization: 'Цахилгаан дамжуулах үндэсний сүлжээ ТӨХК', category: 'Engineer', routerNumber: 'R23', routerIp: '10.16.16.33', totalScore: 0,
+      id: 'p23', name: 'Лхамгарав Ариунхишиг', organization: 'Цахилгаан дамжуулах үндэсний сүлжээ ТӨХК', category: 'Engineer', routerNumber: 'R23', routerIp: '10.16.15.33', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p24', name: 'Цогбадрах Ганболд', organization: 'ИНФО СЕК ПЛАС ХХК', category: 'Engineer', routerNumber: 'R24', routerIp: '10.16.16.34', totalScore: 0,
+      id: 'p24', name: 'Цогбадрах Ганболд', organization: 'ИНФО СЕК ПЛАС ХХК', category: 'Engineer', routerNumber: 'R24', routerIp: '10.16.15.34', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p25', name: 'Эрдэнэбат Амгаланбаяр', organization: 'Мобиком корпораци', category: 'Engineer', routerNumber: 'R25', routerIp: '10.16.16.35', totalScore: 0,
+      id: 'p25', name: 'Эрдэнэбат Амгаланбаяр', organization: 'Мобиком корпораци', category: 'Engineer', routerNumber: 'R25', routerIp: '10.16.15.35', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p26', name: 'Бацаанчанаг Чагнаадорж', organization: 'Мобиком корпораци', category: 'Engineer', routerNumber: 'R26', routerIp: '10.16.16.36', totalScore: 0,
+      id: 'p26', name: 'Бацаанчанаг Чагнаадорж', organization: 'Мобиком корпораци', category: 'Engineer', routerNumber: 'R26', routerIp: '10.16.15.36', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p27', name: 'Баасандорж Нямдорж', organization: 'Телко Инженеринг сервис ХХК', category: 'Engineer', routerNumber: 'R27', routerIp: '10.16.16.37', totalScore: 0,
+      id: 'p27', name: 'Баасандорж Нямдорж', organization: 'Телко Инженеринг сервис ХХК', category: 'Engineer', routerNumber: 'R27', routerIp: '10.16.15.37', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p28', name: 'Мөнхбат Халиун', organization: 'Эс системс ХХК', category: 'Engineer', routerNumber: 'R28', routerIp: '10.16.16.38', totalScore: 0,
+      id: 'p28', name: 'Мөнхбат Халиун', organization: 'Эс системс ХХК', category: 'Engineer', routerNumber: 'R28', routerIp: '10.16.15.38', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p29', name: 'Эрдэнэням Эрдэнэдалай', organization: 'Эс системс ХХК', category: 'Engineer', routerNumber: 'R29', routerIp: '10.16.16.39', totalScore: 0,
+      id: 'p29', name: 'Эрдэнэням Эрдэнэдалай', organization: 'Эс системс ХХК', category: 'Engineer', routerNumber: 'R29', routerIp: '10.16.15.39', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p30', name: 'Бат-Эрдэнэ Эрдэнэбат', organization: 'ШУТИС, МХТС', category: 'Engineer', routerNumber: 'R30', routerIp: '10.16.16.40', totalScore: 0,
+      id: 'p30', name: 'Бат-Эрдэнэ Эрдэнэбат', organization: 'ШУТИС, МХТС', category: 'Engineer', routerNumber: 'R30', routerIp: '10.16.15.40', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {

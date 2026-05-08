@@ -1003,7 +1003,7 @@ export const AdminPanelPage: React.FC = () => {
                     type="text"
                     required
                     className="w-full bg-black/40 border border-cyber-border rounded-lg p-3 text-white focus:outline-none focus:border-cyber-accent transition-colors font-mono"
-                    placeholder="10.16.16.x"
+                    placeholder="10.16.15.x"
                     value={regIp}
                     onChange={e => setRegIp(e.target.value)}
                   />
