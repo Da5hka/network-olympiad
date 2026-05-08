@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { Client } = require('ssh2');
-const { challenges, DEVICE_MAP, DEVICE_IP } = require('./tasksConfig');
+const { challenges, DEVICE_MAP, getDeviceIp } = require('./tasksConfig');
 
 // ─── Persistent score storage ───────────────────────────────────────────────
 const SCORES_FILE = path.join(__dirname, 'scores.json');
@@ -287,13 +287,13 @@ function evaluateMatches(output, matchRules) {
 
 // ─── SSH helpers ─────────────────────────────────────────────────────────────
 
-function runDeviceShell(jumpHost, devicePort, commands) {
+function runDeviceShell(jumpHost, deviceIp, devicePort, commands) {
   return new Promise((resolve) => {
     const overallTimeout = setTimeout(() => {
       resolve({ success: false, output: '', error: 'Device connection timeout' });
     }, 45000);
 
-    jumpHost.forwardOut('127.0.0.1', 0, DEVICE_IP, devicePort, (err, stream) => {
+    jumpHost.forwardOut('127.0.0.1', 0, deviceIp, devicePort, (err, stream) => {
       if (err) {
         clearTimeout(overallTimeout);
         return resolve({ success: false, output: '', error: 'Port forward failed' });
@@ -377,6 +377,7 @@ function runDeviceShell(jumpHost, devicePort, commands) {
 }
 
 function checkParticipantEnv(eveIp) {
+  const deviceIp = getDeviceIp(eveIp);
   return new Promise((resolve) => {
     const jumpHost = new Client();
     const overallTimeout = setTimeout(() => {
@@ -413,7 +414,7 @@ function checkParticipantEnv(eveIp) {
             continue;
           }
 
-          const result = await runDeviceShell(jumpHost, deviceInfo.port, check.commands);
+          const result = await runDeviceShell(jumpHost, deviceIp, deviceInfo.port, check.commands);
 
           if (!result.success) {
             console.log(`[CHECK] ${challenge.id} | ${check.device} | FAIL: ${result.error}`);
@@ -791,7 +792,8 @@ app.post('/api/test-eve', requireAuth, async (req, res) => {
     client.on('ready', () => {
       clearTimeout(timeout);
       // Try to also test a port forward to verify TCP forwarding works
-      client.forwardOut('127.0.0.1', 0, DEVICE_IP, 30003, (err, stream) => {
+      const testDeviceIp = getDeviceIp(ip);
+      client.forwardOut('127.0.0.1', 0, testDeviceIp, 30003, (err, stream) => {
         if (err) {
           client.end();
           return resolve({ success: true, sshOk: true, forwardOk: false, error: `SSH OK but port forward failed: ${err.message}` });

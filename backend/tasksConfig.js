@@ -1,7 +1,5 @@
-// Device name to management IP mapping (inside each EVE environment)
 // Device name to SSH port mapping
-// All devices are accessed via the EVE host IP, only port differs
-const DEVICE_IP = '10.16.15.4';
+// All devices in each EVE environment use the same port numbers
 const DEVICE_MAP = {
   'corp-dsw02': { port: 30002 },
   'corp-dsw01': { port: 30003 },
@@ -14,6 +12,21 @@ const DEVICE_MAP = {
   'wan-rtr02': { port: 30015 },
   'Fusion-rtr02': { port: 30016 },
 };
+
+// Map EVE IP (participant routerIp) to the device forward IP
+// 10.16.15.3 -> 10.16.15.4, 10.16.15.X (11-42) -> 10.16.15.(X+100)
+function getDeviceIp(eveIp) {
+  if (eveIp === '10.16.15.3') return '10.16.15.4';
+  const parts = eveIp.split('.');
+  if (parts[0] === '10' && parts[1] === '16' && parts[2] === '15') {
+    const lastOctet = parseInt(parts[3], 10);
+    if (lastOctet >= 11 && lastOctet <= 42) {
+      return `10.16.15.${lastOctet + 100}`;
+    }
+  }
+  // Fallback: same subnet, +100
+  return eveIp;
+}
 
 // All challenges from the competition spreadsheet
 // Each challenge has checks[] - ALL checks must pass for points to be awarded
@@ -45,16 +58,16 @@ const challenges = [
       {
         device: 'wan-rtr01',
         commands: [
-          'show ip bgp neighbors 202.43.65.1 advertised-routes',
-          'show bgp ipv6 unicast neighbors 2001:DB9:0:10::2 advertised-routes'
+          'show ip bgp neighbors 103.88.34.1 advertised-routes | b Network',
+          'show bgp ipv6 unicast neighbors 2001:D29:0:10::2 advertised-routes | b Network'
         ],
         matchRules: ['133.34.12.0/24', '133.34.13.0/24', ' 0.0.0.0', '32768', '2001:DB8::/32']
       },
       {
         device: 'wan-rtr02',
         commands: [
-          'show ip bgp neighbors 103.88.34.1 advertised-routes',
-          'show bgp ipv6 unicast neighbors 2001:D29:0:10::2 advertised-routes'
+          'show ip bgp neighbors 103.88.34.1 advertised-routes | b Network',
+          'show bgp ipv6 unicast neighbors 2001:D29:0:10::2 advertised-routes | b Network'
         ],
         matchRules: ['133.34.12.0/24', '133.34.13.0/24', ' 0.0.0.0', '32768', '2001:DB8::/32']
       }
@@ -387,4 +400,4 @@ const challenges = [
   }
 ];
 
-module.exports = { challenges, DEVICE_MAP, DEVICE_IP };
+module.exports = { challenges, DEVICE_MAP, getDeviceIp };
