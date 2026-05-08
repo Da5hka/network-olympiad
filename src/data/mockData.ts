@@ -450,7 +450,7 @@ export const initialMockData: AppState = {
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
     },
     {
-      id: 'p31', name: 'dashka', organization: 'Admin', category: 'Engineer', routerNumber: 'R31', routerIp: '10.16.15.3', totalScore: 0,
+      id: 'p31', name: 'dashka', organization: 'Admin', category: 'Engineer', routerNumber: 'R31', routerIp: '10.16.16.42', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-05-07T00:00:00Z'
     }
   ],

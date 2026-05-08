@@ -71,13 +71,18 @@ export const ParticipantDetailPage: React.FC = () => {
           <div className="space-y-4">
             {state.tasks.map(task => {
               const scoreRecord = participant.taskScores.find(ts => ts.taskId === task.id);
-              const isSolved = !!scoreRecord;
+              const isSolved = !!scoreRecord && scoreRecord.score > 0;
+              const isFailed = !!scoreRecord && scoreRecord.score === 0;
               return (
-                <div key={task.id} className={cn("p-4 rounded-lg border flex items-center justify-between", isSolved ? "bg-cyber-neon/5 border-cyber-neon/30" : "bg-black/20 border-cyber-border")}>
+                <div key={task.id} className={cn("p-4 rounded-lg border flex items-center justify-between",
+                  isSolved ? "bg-cyber-neon/5 border-cyber-neon/30" :
+                  isFailed ? "bg-red-500/10 border-red-500/30" :
+                  "bg-black/20 border-cyber-border"
+                )}>
                   <div className="flex items-center gap-4">
-                    {isSolved ? <CheckCircle2 className="w-6 h-6 text-cyber-neon flex-shrink-0" /> : <XCircle className="w-6 h-6 text-cyber-text-muted opacity-50 flex-shrink-0" />}
+                    {isSolved ? <CheckCircle2 className="w-6 h-6 text-cyber-neon flex-shrink-0" /> : <XCircle className={cn("w-6 h-6 flex-shrink-0", isFailed ? "text-red-500" : "text-cyber-text-muted opacity-50")} />}
                     <div>
-                      <p className={cn("font-medium", isSolved ? "text-white" : "text-cyber-text-muted")}>{task.title}</p>
+                      <p className={cn("font-medium", isSolved ? "text-white" : isFailed ? "text-red-400" : "text-cyber-text-muted")}>{task.title}</p>
                       <p className="text-xs font-mono text-cyber-text-muted mt-1">{task.category}</p>
                     </div>
                   </div>
@@ -86,6 +91,11 @@ export const ParticipantDetailPage: React.FC = () => {
                       <>
                         <div className="font-mono text-cyber-neon font-bold">+{scoreRecord.score}</div>
                         <div className="text-[10px] text-cyber-text-muted mt-1">{formatDate(scoreRecord.completedAt)}</div>
+                      </>
+                    ) : isFailed ? (
+                      <>
+                        <div className="font-mono text-red-500 font-bold">0 / {task.maxScore}</div>
+                        <div className="text-[10px] text-cyber-text-muted mt-1">{formatDate(scoreRecord!.completedAt)}</div>
                       </>
                     ) : (
                       <div className="font-mono text-cyber-text-muted">-- / {task.maxScore}</div>
