@@ -283,7 +283,7 @@ const challenges = [
     id: 'c14',
     category: 'Service',
     subCategory: 'NTP',
-    description: 'Fusion router#1 дээр NTP Master тохиргоо хийнэ үү, Fusion router#2-ын цагийн тохиргоогоо Fusion router#1-оос авна. Fusion router#1 цагаа EVE-NG системийн хаягаасаа sync хийдэг байхаар тохируулна. Цагийн бүсийг ULAT 8 байхаар заана.',
+    description: 'Fusion router#1 дээр NTP Master тохиргоо хийнэ үү, Fusion router#2-ын цагийн тохиргоогоо fusion router#1-ээс авна. Fusion router#1 цагаа EVE-NG системийн хаягаасаа sync хийдэг байхаар тохируулна. Цагийн бүсийг ULAT 8 байхаар заана. Source interface-ийг төхөөрөмжийн management interface-ээр хийх хэрэгтэйг санаарай.',
     owner: 'Byambaa',
     points: 2,
     checks: [
@@ -342,7 +342,7 @@ const challenges = [
     id: 'c18',
     category: 'Service',
     subCategory: 'TFTP',
-    description: 'Corp-esw#2 ийн дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFPT Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ. corp-esw03-confg',
+    description: 'Corp-esw#3 ийн дээр hardware гэмтсэний улмаас төхөөрөмж эвдэрсэн тул сүлжээний инженер шинээр төхөөрөмж суурилуулсан. Хуучин төхөөрөмжийн тохиргоо TFPT Server дээр хадгалагдаж байгаа тул backup тохиргоог switch-рүү татаж авч үйлчиллэгээг сэргээ. corp-esw03-confg',
     owner: 'Byambaa',
     points: 2,
     checks: [

@@ -95,7 +95,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       try {
         const res = await fetch(`${BACKEND_URL}/api/scores`);
         if (!res.ok) return;
-        const backendScores: Record<string, { taskScores: { taskId: string; score: number; completedAt: string }[]; totalScore: number; name?: string; lastUpdated?: string }> = await res.json();
+        const backendScores: Record<string, { taskScores: { taskId: string; score: number; completedAt: string }[]; totalScore: number; name?: string; status?: string; lastUpdated?: string }> = await res.json();
 
         setState(prev => {
           let changed = false;
@@ -109,6 +109,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               ...p,
               taskScores: remote.taskScores || p.taskScores,
               totalScore: remote.totalScore ?? p.totalScore,
+              status: (remote.status as any) || p.status,
               lastUpdated: remote.lastUpdated || p.lastUpdated
             };
           });
@@ -121,6 +122,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     fetchScores();
     const interval = setInterval(fetchScores, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll backend competition state so all users see the same buttons
+  useEffect(() => {
+    const BACKEND_URL = 'http://localhost:3001';
+
+    const fetchCompState = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/competition-state`);
+        if (!res.ok) return;
+        const data: { competitionState: CompetitionState; updatedAt?: string } = await res.json();
+        if (data.competitionState) {
+          setState(prev => {
+            if (prev.competitionState === data.competitionState) return prev;
+            localStorage.setItem(STORAGE_KEYS.COMPETITION_STATE, data.competitionState);
+            return { ...prev, competitionState: data.competitionState };
+          });
+        }
+      } catch {}
+    };
+
+    fetchCompState();
+    const interval = setInterval(fetchCompState, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -155,6 +180,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setCompetitionState = (competitionState: CompetitionState) => {
     localStorage.setItem(STORAGE_KEYS.COMPETITION_STATE, competitionState);
     setState((prev) => ({ ...prev, competitionState }));
+
+    // Sync to backend so all users see the same state
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    fetch('http://localhost:3001/api/competition-state', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ competitionState })
+    }).catch(() => {});
   };
 
   const updateParticipantScore = (participantId: string, taskId: string, score: number, secureToken?: string) => {

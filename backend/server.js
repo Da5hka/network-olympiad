@@ -34,6 +34,30 @@ function saveScores(scores) {
 // participantScores: { [participantId]: { taskScores: [{taskId, score, completedAt}], totalScore, lastUpdated } }
 let participantScores = loadScores();
 
+// ─── Persistent competition state ───────────────────────────────────────────
+const COMP_STATE_FILE = path.join(__dirname, 'competition-state.json');
+
+function loadCompetitionState() {
+  try {
+    if (fs.existsSync(COMP_STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(COMP_STATE_FILE, 'utf8'));
+    }
+  } catch (e) {
+    console.error('[COMP] Failed to load competition state:', e.message);
+  }
+  return { competitionState: 'NOT_STARTED' };
+}
+
+function saveCompetitionState(state) {
+  try {
+    fs.writeFileSync(COMP_STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[COMP] Failed to save competition state:', e.message);
+  }
+}
+
+let competitionData = loadCompetitionState();
+
 const app = express();
 
 // ─── Security middleware ────────────────────────────────────────────────────
@@ -310,11 +334,11 @@ function runDeviceShell(jumpHost, devicePort, commands) {
             if (i < allCommands.length) {
               channel.write(allCommands[i] + '\r\n');
               i++;
-              setTimeout(sendNext, 2000);
+              setTimeout(sendNext, 4000);
             }
           };
 
-          setTimeout(sendNext, 2500);
+          setTimeout(sendNext, 4000);
         });
       });
 
@@ -524,6 +548,15 @@ async function pingAllParticipants(participants) {
 
 // ─── Score update from check results ────────────────────────────────────────
 
+function updateParticipantConnectionStatus(participantId, status) {
+  if (!participantId) return;
+  const existing = participantScores[participantId] || { taskScores: [], totalScore: 0, name: '' };
+  existing.status = status;
+  existing.lastUpdated = new Date().toISOString();
+  participantScores[participantId] = existing;
+  saveScores(participantScores);
+}
+
 function updateScoresFromResult(participantId, participantName, challengeResults) {
   if (!challengeResults || !participantId) return;
 
@@ -571,6 +604,9 @@ async function runAllChecks(participants) {
         };
         checkState.progress.completed++;
         updateScoresFromResult(p.id, p.name, result.challengeResults);
+        // Save connection status
+        const connStatus = result.error ? 'Offline' : 'Online';
+        updateParticipantConnectionStatus(p.id, connStatus);
         console.log(`[${checkState.progress.completed}/${checkState.progress.total}] Checked ${p.name}: ${result.totalScore || 0} pts`);
       });
     });
@@ -728,6 +764,10 @@ app.post('/api/ping-all', requireAuth, async (req, res) => {
   }
 
   const results = await pingAllParticipants(participants);
+  // Save connection status for all users to see
+  for (const [pId, r] of Object.entries(results)) {
+    updateParticipantConnectionStatus(pId, r.status);
+  }
   res.json({ results, checkedAt: new Date().toISOString() });
 });
 
@@ -853,6 +893,23 @@ app.post('/api/auto-check/stop', requireAuth, (req, res) => {
 // Public scores endpoint (no auth - all users can see scores)
 app.get('/api/scores', (req, res) => {
   res.json(participantScores);
+});
+
+// Public competition state (no auth - all users see same state)
+app.get('/api/competition-state', (req, res) => {
+  res.json(competitionData);
+});
+
+// Update competition state (admin only)
+app.post('/api/competition-state', requireAuth, (req, res) => {
+  const { competitionState } = req.body;
+  if (!competitionState || !['NOT_STARTED', 'RUNNING', 'FINISHED'].includes(competitionState)) {
+    return res.status(400).json({ error: 'Invalid state. Must be NOT_STARTED, RUNNING, or FINISHED' });
+  }
+  competitionData = { competitionState, updatedAt: new Date().toISOString() };
+  saveCompetitionState(competitionData);
+  console.log(`[COMP] Competition state changed to: ${competitionState}`);
+  res.json(competitionData);
 });
 
 // Health check (no auth needed)
