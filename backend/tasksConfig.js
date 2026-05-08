@@ -72,7 +72,6 @@ const challenges = [
         device: 'wan-rtr02',
         commands: ['show ip route bgp'],
         matchRules: [
-          '0.0.0.0/0 [200/0] via 10.1.18.8',
           '103.88.34.0/24 [200/0] via 10.1.18.8',
           '202.43.65.0/24 [200/0] via 10.1.18.8'
         ]

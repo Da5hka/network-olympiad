@@ -199,14 +199,18 @@ function stripAnsi(str) {
     .replace(/\r/g, '');
 }
 
+function normalizeWhitespace(str) {
+  return str.replace(/[^\S\n]+/g, ' ');
+}
+
 function evaluateMatches(output, matchRules) {
   if (!output || !matchRules) return false;
 
-  const cleanOutput = stripAnsi(output);
+  const cleanOutput = normalizeWhitespace(stripAnsi(output));
 
   for (const rule of matchRules) {
     if (typeof rule === 'string') {
-      if (!cleanOutput.includes(rule)) {
+      if (!cleanOutput.includes(normalizeWhitespace(rule))) {
         return false;
       }
     } else if (rule.type === 'regex_gt') {
@@ -220,7 +224,7 @@ function evaluateMatches(output, matchRules) {
         return false;
       }
     } else if (rule.type === 'count') {
-      const escaped = rule.substring.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escaped = normalizeWhitespace(rule.substring).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const matches = cleanOutput.match(new RegExp(escaped, 'g'));
       if (!matches || matches.length < rule.minCount) {
         return false;
