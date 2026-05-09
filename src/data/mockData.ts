@@ -448,10 +448,6 @@ export const initialMockData: AppState = {
     {
       id: 'p30', name: 'Бат-Эрдэнэ Эрдэнэбат', organization: 'ШУТИС, МХТС', category: 'Engineer', routerNumber: 'R30', routerIp: '10.16.15.40', totalScore: 0,
       taskScores: [], status: 'Connecting', lastUpdated: '2026-04-23T04:20:00Z'
-    },
-    {
-      id: 'p31', name: 'dashka', organization: 'Admin', category: 'Engineer', routerNumber: 'R31', routerIp: '10.16.15.3', totalScore: 0,
-      taskScores: [], status: 'Connecting', lastUpdated: '2026-05-07T00:00:00Z'
     }
   ],
   diagnostics: []
